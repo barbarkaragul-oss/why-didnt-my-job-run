@@ -112,7 +112,8 @@ jobs:
     needs: [lint, test]
     if: \${{ !cancelled() }}
     runs-on: ubuntu-latest
-    steps: [{ run: echo "lint=\${{ needs.lint.result }} test=\${{ needs.test.result }}" }]
+    steps:
+      - run: echo "lint=\${{ needs.lint.result }} test=\${{ needs.test.result }}"
 
   report-only-if-test-ran:
     needs: [lint, test]

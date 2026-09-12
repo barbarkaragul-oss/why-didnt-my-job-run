@@ -106,7 +106,17 @@ export function evaluateCondition(expression: string, github: Json, opts: Evalua
     .filter((t) => !(t.node instanceof Literal))
     .map((t) => ({ text: exprText(t.node), value: displayValue(t.value), kind: kindStr(t.value.kind), depth: 0 }));
   const truthy = isTruthy(value);
-  return { ok: true, truthy, value: displayValue(value), kind: kindStr(value.kind), subValues, reason: explain(ast, ev.trace, truthy) };
+  let reason = explain(ast, ev.trace, truthy);
+  // Status functions are only as informative as the needs behind them: say which job did it.
+  const m = /^(success|failure|cancelled)\(\) is (true|false)$/.exec(reason);
+  if (m) {
+    const bad = Object.entries(opts.needs).filter(([, n]) => n.result !== 'success').map(([id, n]) => `${id} ${n.result === 'skipped' ? 'was skipped' : n.result === 'failure' ? 'failed' : 'was cancelled'}`);
+    if (m[1] === 'success' && m[2] === 'false') reason = opts.cancelled ? 'success() is false because the run was cancelled' : bad.length ? `success() is false because ${bad.join(', ')}` : reason;
+    else if (m[1] === 'failure' && m[2] === 'true') reason = `failure() is true because ${bad.filter((b) => b.endsWith('failed')).join(', ') || bad.join(', ')}`;
+    else if (m[1] === 'failure' && m[2] === 'false') reason = Object.keys(opts.needs).length ? 'failure() is false: no job it needs failed' : 'failure() is false: the job needs nothing that could have failed';
+    else if (m[1] === 'success' && m[2] === 'true') reason = Object.keys(opts.needs).length ? 'success() is true: every job it needs succeeded' : 'success() is true: the job needs nothing';
+  }
+  return { ok: true, truthy, value: displayValue(value), kind: kindStr(value.kind), subValues, reason };
 }
 
 /** Runner truthiness for `if:`: false, null, 0, '' are false; everything else (objects too) is true. */

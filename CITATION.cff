@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you refer to this tool, please cite the repository."
+title: "Why didn't my job run? A GitHub Actions condition simulator running GitHub's own parser and expression engine in the browser"
+type: software
+authors:
+  - name: "Why didn't my job run? contributors"
+repository-code: "https://github.com/barbarkaragul-oss/why-didnt-my-job-run"
+url: "https://barbarkaragul-oss.github.io/why-didnt-my-job-run/"
+license: MIT
+date-released: "2026-09-12"
