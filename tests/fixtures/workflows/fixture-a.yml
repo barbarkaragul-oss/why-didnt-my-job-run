@@ -1,0 +1,216 @@
+name: fixture-a
+# Ground truth for the simulator: every job below exists to record what GitHub actually does.
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        type: boolean
+        default: false
+      env:
+        type: choice
+        options: [dev, prod]
+        default: dev
+  release:
+    types: [published]
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  context:
+    runs-on: ubuntu-latest
+    env:
+      WDMJR_GITHUB: ${{ toJSON(github) }}
+      WDMJR_INPUTS: ${{ toJSON(inputs) }}
+    steps:
+      - run: |
+          echo "::WDMJR_GITHUB_START::"
+          echo "$WDMJR_GITHUB" | base64 -w0
+          echo
+          echo "::WDMJR_GITHUB_END::"
+          echo "::WDMJR_INPUTS_START::"
+          echo "$WDMJR_INPUTS" | base64 -w0
+          echo
+          echo "::WDMJR_INPUTS_END::"
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ github.ref_name }}" != "fail-build"
+
+  fork_check:
+    if: github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  not_fork_strict:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  release_label:
+    if: contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  main_push:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  tag_only:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  deploy:
+    needs: [build, main_push]
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  deploy_anyway:
+    needs: [build, main_push]
+    if: always() && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  after_build:
+    needs: [build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  on_failure:
+    needs: [build]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  not_cancelled:
+    needs: [build]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  skipped_check:
+    needs: [main_push]
+    if: always() && needs.main_push.result == 'skipped'
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  skipped_check_no_always:
+    needs: [main_push]
+    if: needs.main_push.result == 'skipped'
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  draft_pr:
+    if: github.event.pull_request.draft == true
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  null_eq_false:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  empty_head_ref:
+    if: github.head_ref == ''
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  pr_number_positive:
+    if: github.event.pull_request.number > 0
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  case_insensitive:
+    if: github.ref_name == 'MAIN'
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  dispatch_deploy_bool:
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy == true
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  dispatch_deploy_str:
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  dispatch_env_prod:
+    if: inputs.env == 'prod'
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  no_skip_deploy_msg:
+    if: "!contains(github.event.head_commit.message, '[skip deploy]')"
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  actor_check:
+    if: github.actor == 'barbarkaragul-oss'
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  run_attempt_number:
+    if: github.run_attempt == 1
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  contains_ref_feature:
+    if: contains(github.ref, 'feature')
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  format_check:
+    if: format('{0}-{1}', github.event_name, github.ref_name) == 'push-main'
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  release_published:
+    if: github.event_name == 'release' && github.event.action == 'published'
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  issue_bug:
+    if: github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'bug')
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+
+  matrix_job:
+    if: github.event_name != 'issues'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+        include:
+          - node: 24
+            experimental: true
+        exclude:
+          - node: 20
+    steps:
+      - run: echo "node ${{ matrix.node }}"
+      - if: matrix.node == 22
+        run: echo only-22
+      - if: matrix.experimental
+        run: echo experimental
+
+  step_ifs:
+    runs-on: ubuntu-latest
+    steps:
+      - id: a
+        run: echo "x=1" >> "$GITHUB_OUTPUT"
+      - if: github.event_name == 'push'
+        run: echo push-only
+      - if: steps.a.outputs.x == '1'
+        run: echo output-one
+      - if: steps.a.outputs.x == 1
+        run: echo output-one-number
+      - if: failure()
+        run: echo on-failure
+      - if: always()
+        run: echo always

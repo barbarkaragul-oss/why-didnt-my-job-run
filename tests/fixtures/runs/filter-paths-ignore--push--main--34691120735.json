@@ -1,0 +1,46 @@
+{
+  "recorded_at": "2026-09-12T11:39:06.622Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34691120735,
+  "workflow": "filter-paths-ignore",
+  "workflow_path": ".github/workflows/filter-paths-ignore.yml",
+  "event": "push",
+  "head_branch": "main",
+  "head_sha": "2d4a66ec5e30936bc3e442c609044a58f49d5126",
+  "conclusion": "success",
+  "display_title": "Fixture workflows: conditions, filters, matrix, step ifs",
+  "changed_files": [
+    ".github/workflows/filter-branches-ignore.yml",
+    ".github/workflows/filter-branches.yml",
+    ".github/workflows/filter-paths-ignore.yml",
+    ".github/workflows/filter-pr-default-types.yml",
+    ".github/workflows/filter-pr-labeled.yml",
+    ".github/workflows/filter-tags.yml",
+    ".github/workflows/fixture-a.yml",
+    ".github/workflows/fixture-hashfiles.yml",
+    "README.md",
+    "docs/x.md",
+    "package.json",
+    "src/a.txt"
+  ],
+  "jobs": [
+    {
+      "name": "ran",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"ref refs/heads/main\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

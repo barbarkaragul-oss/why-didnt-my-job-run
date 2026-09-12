@@ -1,0 +1,16 @@
+{
+  "recorded_at": "2026-09-12T11:39:01.527Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34691139816,
+  "workflow": "fixture-hashfiles",
+  "workflow_path": ".github/workflows/fixture-hashfiles.yml",
+  "event": "push",
+  "head_branch": "feature/x",
+  "head_sha": "711ef7ab6c579b4587569e24ade9f53bcaf8f83f",
+  "conclusion": "failure",
+  "display_title": "docs: feature note",
+  "changed_files": [
+    "README.md"
+  ],
+  "jobs": []
+}

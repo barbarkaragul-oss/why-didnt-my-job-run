@@ -1,0 +1,32 @@
+{
+  "recorded_at": "2026-09-12T11:37:57.792Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34691185597,
+  "workflow": "filter-pr-labeled",
+  "workflow_path": ".github/workflows/filter-pr-labeled.yml",
+  "event": "pull_request",
+  "head_branch": "feature/x",
+  "head_sha": "711ef7ab6c579b4587569e24ade9f53bcaf8f83f",
+  "conclusion": "success",
+  "display_title": "Feature x",
+  "jobs": [
+    {
+      "name": "ran",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"label release\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

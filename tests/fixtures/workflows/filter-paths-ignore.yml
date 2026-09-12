@@ -1,0 +1,11 @@
+name: filter-paths-ignore
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+jobs:
+  ran:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "ref ${{ github.ref }}"

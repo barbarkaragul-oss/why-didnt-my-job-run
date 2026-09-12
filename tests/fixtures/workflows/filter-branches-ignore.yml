@@ -1,0 +1,12 @@
+name: filter-branches-ignore
+on:
+  push:
+    branches-ignore:
+      - 'feature/**'
+    tags-ignore:
+      - '**'
+jobs:
+  ran:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "ref ${{ github.ref }}"

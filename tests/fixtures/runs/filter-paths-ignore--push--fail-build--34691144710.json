@@ -1,0 +1,35 @@
+{
+  "recorded_at": "2026-09-12T11:38:41.861Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34691144710,
+  "workflow": "filter-paths-ignore",
+  "workflow_path": ".github/workflows/filter-paths-ignore.yml",
+  "event": "push",
+  "head_branch": "fail-build",
+  "head_sha": "921ed9b07986cfed1980f4281c57b91886356a55",
+  "conclusion": "success",
+  "display_title": "feat: d",
+  "changed_files": [
+    "src/d.txt"
+  ],
+  "jobs": [
+    {
+      "name": "ran",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"ref refs/heads/fail-build\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

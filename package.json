@@ -1,0 +1,32 @@
+{
+  "name": "why-didnt-my-job-run",
+  "version": "1.0.0",
+  "description": "Paste a GitHub Actions workflow, pick an event, see which jobs run and why. GitHub's own parser and expression engine, in your browser.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --import tsx --test \"tests/*.test.ts\"",
+    "build": "tsx scripts/build.ts",
+    "dev": "tsx scripts/build.ts --watch",
+    "typecheck": "tsc --noEmit",
+    "ci": "npm run typecheck && npm test && npm run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "private": "true",
+  "dependencies": {
+    "@actions/expressions": "^0.3.61",
+    "@actions/workflow-parser": "^0.3.61",
+    "@octokit/webhooks-examples": "^7.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

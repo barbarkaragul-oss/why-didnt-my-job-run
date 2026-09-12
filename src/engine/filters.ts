@@ -1,0 +1,236 @@
+/**
+ * `on:` trigger matching: does this event, with these branches / tags / paths / activity types,
+ * start the workflow at all? This is the one part GitHub does not ship as a package, so it is
+ * implemented here from the documented rules and checked against (a) every example in the docs
+ * filter cheat sheet and (b) real runs recorded in the fixtures repository.
+ *
+ * Pattern rules (docs, "Filter pattern cheat sheet"):
+ *   *   matches zero or more characters but not `/`
+ *   **  matches zero or more of any character, including `/`
+ *   ?   matches zero or one of the preceding character
+ *   +   matches one or more of the preceding character
+ *   []  character class, ranges allowed
+ *   !   at the start negates the pattern; order matters: a negative pattern after a match excludes
+ *       again, a positive pattern after an exclusion includes again
+ *   \   escapes a special character
+ * Patterns are anchored: they must match the whole branch/tag name (without refs/heads/) or the
+ * whole file path. Branch and tag filters on push are independent lists: if only `tags` is set,
+ * branch pushes do not run, and vice versa; if neither is set, everything runs.
+ */
+import type { ParsedWorkflow } from './workflow.js';
+
+export interface FilterDecision {
+  matched: boolean;
+  /** Rule-by-rule explanation, in the order GitHub applies them. */
+  reasons: string[];
+}
+
+export interface TriggerInput {
+  event: string;
+  action?: string;
+  /** Branch or tag name without refs/heads/ or refs/tags/ (push, create, delete, workflow_dispatch). */
+  refName?: string;
+  refType?: 'branch' | 'tag';
+  /** Pull request base branch (pull_request, pull_request_target). */
+  baseBranch?: string;
+  changedFiles?: string[];
+}
+
+/** Default activity types when `types:` is omitted (docs, "Events that trigger workflows"). */
+export const DEFAULT_TYPES: Record<string, string[]> = {
+  pull_request: ['opened', 'synchronize', 'reopened'],
+  pull_request_target: ['opened', 'synchronize', 'reopened'],
+  issues: ['opened', 'edited', 'deleted', 'transferred', 'pinned', 'unpinned', 'closed', 'reopened', 'assigned', 'unassigned', 'labeled', 'unlabeled', 'locked', 'unlocked', 'milestoned', 'demilestoned', 'typed', 'untyped'],
+  issue_comment: ['created', 'edited', 'deleted'],
+  release: ['published', 'unpublished', 'created', 'edited', 'deleted', 'prereleased', 'released'],
+  pull_request_review: ['submitted', 'edited', 'dismissed'],
+  pull_request_review_comment: ['created', 'edited', 'deleted'],
+  workflow_run: ['requested', 'completed', 'in_progress'],
+  discussion: ['created', 'edited', 'deleted', 'transferred', 'pinned', 'unpinned', 'labeled', 'unlabeled', 'locked', 'unlocked', 'category_changed', 'answered', 'unanswered'],
+  discussion_comment: ['created', 'edited', 'deleted'],
+  label: ['created', 'edited', 'deleted'],
+  milestone: ['created', 'closed', 'opened', 'edited', 'deleted'],
+  check_run: ['created', 'rerequested', 'completed', 'requested_action'],
+  check_suite: ['completed'],
+  merge_group: ['checks_requested'],
+  registry_package: ['published', 'updated'],
+  branch_protection_rule: ['created', 'edited', 'deleted'],
+  project: ['created', 'closed', 'reopened', 'edited', 'deleted'],
+  project_card: ['created', 'moved', 'converted', 'edited', 'deleted'],
+  project_column: ['created', 'updated', 'moved', 'deleted'],
+  watch: ['started'],
+};
+
+/** Compile one GitHub filter pattern into an anchored RegExp. */
+export function compilePattern(pattern: string): RegExp {
+  let re = '';
+  let i = 0;
+  const src = pattern.startsWith('!') ? pattern.slice(1) : pattern;
+  while (i < src.length) {
+    const c = src[i]!;
+    const next = src[i + 1];
+    if (c === '\\' && next !== undefined) {
+      re += escapeRe(next);
+      i += 2;
+      continue;
+    }
+    if (c === '*') {
+      if (next === '*') {
+        re += '.*';
+        i += 2;
+        // "**/" followed by more: any directory prefix including none
+        continue;
+      }
+      re += '[^/]*';
+      i += 1;
+      continue;
+    }
+    if (c === '?') {
+      // zero or one of the preceding character: the preceding atom is already emitted; make it optional
+      re = makePrecedingOptional(re);
+      i += 1;
+      continue;
+    }
+    if (c === '+') {
+      re += '+';
+      i += 1;
+      continue;
+    }
+    if (c === '[') {
+      const end = src.indexOf(']', i + 1);
+      if (end > i) {
+        let cls = src.slice(i + 1, end);
+        if (cls.startsWith('!')) cls = '^' + cls.slice(1);
+        re += `[${cls.replace(/\\/g, '\\\\')}]`;
+        i = end + 1;
+        continue;
+      }
+    }
+    re += escapeRe(c);
+    i += 1;
+  }
+  return new RegExp(`^(?:${re})$`);
+}
+
+function makePrecedingOptional(re: string): string {
+  // Find the last atom: either an escaped char (\\x), a class ([...]), or a single char / group.
+  if (re.endsWith(']')) {
+    const start = re.lastIndexOf('[');
+    return re.slice(0, start) + `(?:${re.slice(start)})?`;
+  }
+  if (re.endsWith('.*') || re.endsWith('[^/]*')) return re; // wildcard followed by ?: already optional
+  const m = /(\\.|[^\\])$/.exec(re);
+  if (!m) return re;
+  const atom = m[0];
+  return re.slice(0, re.length - atom.length) + `(?:${atom})?`;
+}
+
+function escapeRe(c: string): string {
+  return /[.*+?^${}()|[\]\\/]/.test(c) ? '\\' + c : c;
+}
+
+/**
+ * Applies an ordered list of patterns (with `!` negations) to one name, GitHub-style.
+ * Returns whether the name is included after all patterns are applied, plus the trace.
+ */
+export function matchPatterns(patterns: string[], name: string): { matched: boolean; trace: string[] } {
+  let matched = false;
+  const trace: string[] = [];
+  const hasPositive = patterns.some((p) => !p.startsWith('!'));
+  if (!hasPositive && patterns.length) {
+    // Docs: a list with only negative patterns still needs a positive one; GitHub treats it as matching nothing.
+    trace.push('only negative patterns: nothing can match (the docs require at least one pattern without !)');
+  }
+  for (const p of patterns) {
+    const negative = p.startsWith('!');
+    const hit = compilePattern(p).test(name);
+    if (negative && hit) { matched = false; trace.push(`${p} excludes "${name}"`); }
+    else if (!negative && hit) { matched = true; trace.push(`${p} matches "${name}"`); }
+    else trace.push(`${p} does not match "${name}"`);
+  }
+  return { matched, trace };
+}
+
+/** Path filters: the workflow runs if at least one changed file is still included after all patterns. */
+export function matchPaths(patterns: string[], files: string[], ignore: boolean): { matched: boolean; trace: string[] } {
+  const trace: string[] = [];
+  if (!files.length) {
+    trace.push(ignore ? 'no changed files known: paths-ignore cannot exclude the run' : 'no changed files known: paths filter cannot match (GitHub also skips the run when no file matches)');
+    return { matched: ignore, trace };
+  }
+  let any = false;
+  for (const f of files) {
+    const r = matchPatterns(patterns, f);
+    const included = ignore ? !r.matched : r.matched;
+    if (included) { any = true; trace.push(ignore ? `"${f}" is not ignored → runs` : `"${f}" matches → runs`); }
+    else trace.push(ignore ? `"${f}" is ignored` : `"${f}" matches no paths pattern`);
+  }
+  return { matched: any, trace };
+}
+
+/** Decide whether the workflow's `on:` block accepts this event. */
+export function decideTrigger(workflow: ParsedWorkflow, input: TriggerInput): FilterDecision {
+  const cfg = (workflow.events as Record<string, unknown>)[input.event] as Record<string, unknown> | undefined | null;
+  if (cfg === undefined) {
+    return { matched: false, reasons: [`The workflow does not listen to ${input.event} (on: ${Object.keys(workflow.events).join(', ') || 'nothing'}).`] };
+  }
+  const reasons: string[] = [`on: ${input.event} is present.`];
+  const c = cfg ?? {};
+
+  // Activity types
+  const types = asStrings(c['types']);
+  const defaults = DEFAULT_TYPES[input.event];
+  if (input.action && (types.length || defaults)) {
+    const allowed = types.length ? types : defaults ?? [];
+    if (!allowed.includes(input.action)) {
+      reasons.push(`activity type "${input.action}" is not in ${types.length ? 'types: [' + allowed.join(', ') + ']' : 'the default types (' + allowed.join(', ') + ')'}.`);
+      return { matched: false, reasons };
+    }
+    reasons.push(`activity type "${input.action}" is ${types.length ? 'listed in types' : 'one of the default types'}.`);
+  }
+
+  // Branch / tag filters
+  const branches = asStrings(c['branches']);
+  const branchesIgnore = asStrings(c['branches-ignore']);
+  const tags = asStrings(c['tags']);
+  const tagsIgnore = asStrings(c['tags-ignore']);
+  const refName = input.event === 'pull_request' || input.event === 'pull_request_target' ? input.baseBranch : input.refName;
+  const refType = input.event === 'pull_request' || input.event === 'pull_request_target' ? 'branch' : input.refType ?? 'branch';
+
+  if (input.event === 'push') {
+    const hasBranchFilter = branches.length || branchesIgnore.length;
+    const hasTagFilter = tags.length || tagsIgnore.length;
+    if (refType === 'tag') {
+      if (hasBranchFilter && !hasTagFilter) { reasons.push('only branch filters are set, so tag pushes never run this workflow.'); return { matched: false, reasons }; }
+      if (tags.length) { const r = matchPatterns(tags, refName ?? ''); reasons.push(...r.trace.map((t) => `tags: ${t}`)); if (!r.matched) return { matched: false, reasons }; }
+      if (tagsIgnore.length) { const r = matchPatterns(tagsIgnore, refName ?? ''); reasons.push(...r.trace.map((t) => `tags-ignore: ${t}`)); if (r.matched) { reasons.push('tag is ignored.'); return { matched: false, reasons }; } }
+    } else {
+      if (hasTagFilter && !hasBranchFilter) { reasons.push('only tag filters are set, so branch pushes never run this workflow.'); return { matched: false, reasons }; }
+      if (branches.length) { const r = matchPatterns(branches, refName ?? ''); reasons.push(...r.trace.map((t) => `branches: ${t}`)); if (!r.matched) return { matched: false, reasons }; }
+      if (branchesIgnore.length) { const r = matchPatterns(branchesIgnore, refName ?? ''); reasons.push(...r.trace.map((t) => `branches-ignore: ${t}`)); if (r.matched) { reasons.push('branch is ignored.'); return { matched: false, reasons }; } }
+    }
+  } else if (refName && (branches.length || branchesIgnore.length)) {
+    if (branches.length) { const r = matchPatterns(branches, refName); reasons.push(...r.trace.map((t) => `branches: ${t}`)); if (!r.matched) return { matched: false, reasons }; }
+    if (branchesIgnore.length) { const r = matchPatterns(branchesIgnore, refName); reasons.push(...r.trace.map((t) => `branches-ignore: ${t}`)); if (r.matched) return { matched: false, reasons }; }
+  }
+
+  // Path filters (push and pull_request family only)
+  const paths = asStrings(c['paths']);
+  const pathsIgnore = asStrings(c['paths-ignore']);
+  if (paths.length || pathsIgnore.length) {
+    if (refType === 'tag' && input.event === 'push') {
+      reasons.push('paths filters are not evaluated for tag pushes.');
+    } else {
+      const files = input.changedFiles ?? [];
+      if (paths.length) { const r = matchPaths(paths, files, false); reasons.push(...r.trace.map((t) => `paths: ${t}`)); if (!r.matched) return { matched: false, reasons }; }
+      if (pathsIgnore.length) { const r = matchPaths(pathsIgnore, files, true); reasons.push(...r.trace.map((t) => `paths-ignore: ${t}`)); if (!r.matched) return { matched: false, reasons }; }
+    }
+  }
+  return { matched: true, reasons };
+}
+
+function asStrings(v: unknown): string[] {
+  if (Array.isArray(v)) return v.map(String);
+  if (typeof v === 'string') return [v];
+  return [];
+}

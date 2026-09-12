@@ -1,0 +1,35 @@
+{
+  "recorded_at": "2026-09-12T11:38:35.474Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34691146136,
+  "workflow": "filter-branches-ignore",
+  "workflow_path": ".github/workflows/filter-branches-ignore.yml",
+  "event": "push",
+  "head_branch": "main",
+  "head_sha": "9a103c2baca31d546b91da9890ce4eac214e88ca",
+  "conclusion": "success",
+  "display_title": "chore: tweak e [skip deploy]",
+  "changed_files": [
+    "src/e.txt"
+  ],
+  "jobs": [
+    {
+      "name": "ran",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"ref refs/heads/main\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

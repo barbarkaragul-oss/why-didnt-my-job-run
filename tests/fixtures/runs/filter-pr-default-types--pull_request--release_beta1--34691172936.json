@@ -1,0 +1,32 @@
+{
+  "recorded_at": "2026-09-12T11:38:04.237Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34691172936,
+  "workflow": "filter-pr-default-types",
+  "workflow_path": ".github/workflows/filter-pr-default-types.yml",
+  "event": "pull_request",
+  "head_branch": "release/beta1",
+  "head_sha": "1fc1f62fe69231449fdf8ce92c59ee307867a568",
+  "conclusion": "success",
+  "display_title": "Beta draft",
+  "jobs": [
+    {
+      "name": "ran",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"action opened\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

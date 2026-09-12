@@ -1,0 +1,18 @@
+name: fixture-hashfiles
+# Separate file on purpose: if job-level hashFiles is rejected, only this workflow is affected.
+on:
+  push:
+    branches: [main]
+jobs:
+  hashfiles_job_if:
+    if: hashFiles('**/package.json') != ''
+    runs-on: ubuntu-latest
+    steps: [{ run: echo ok }]
+  hashfiles_step_if:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - if: hashFiles('**/package.json') != ''
+        run: echo has-package-json
+      - if: hashFiles('**/nothing-here.xyz') == ''
+        run: echo no-match-is-empty

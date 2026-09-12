@@ -1,0 +1,21 @@
+name: filter-branches
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+      - '!release/beta*'
+    paths:
+      - 'src/**'
+      - '!src/**/*.md'
+jobs:
+  ran:
+    runs-on: ubuntu-latest
+    env:
+      WDMJR_GITHUB: ${{ toJSON(github) }}
+    steps:
+      - run: |
+          echo "::WDMJR_GITHUB_START::"
+          echo "$WDMJR_GITHUB" | base64 -w0
+          echo
+          echo "::WDMJR_GITHUB_END::"

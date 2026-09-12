@@ -1,0 +1,622 @@
+{
+  "recorded_at": "2026-09-12T11:38:54.556Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34691141853,
+  "workflow": "fixture-a",
+  "workflow_path": ".github/workflows/fixture-a.yml",
+  "event": "push",
+  "head_branch": "release/1.0",
+  "head_sha": "1d0b9a65c9d0b42072e77f4eb074f69b384c3e47",
+  "conclusion": "success",
+  "display_title": "feat: b",
+  "changed_files": [
+    "src/b.txt"
+  ],
+  "github": {
+    "job": "context",
+    "ref": "refs/heads/release/1.0",
+    "sha": "1d0b9a65c9d0b42072e77f4eb074f69b384c3e47",
+    "repository": "barbarkaragul-oss/wdmjr-fixtures",
+    "repository_owner": "barbarkaragul-oss",
+    "repository_owner_id": "247049124",
+    "repositoryUrl": "git://github.com/barbarkaragul-oss/wdmjr-fixtures.git",
+    "run_id": "34691141853",
+    "run_number": "3",
+    "retention_days": "90",
+    "run_attempt": "1",
+    "artifact_cache_size_limit": "10",
+    "repository_visibility": "private",
+    "actor_id": "247049124",
+    "actor": "barbarkaragul-oss",
+    "workflow": "fixture-a",
+    "head_ref": "",
+    "base_ref": "",
+    "event_name": "push",
+    "server_url": "https://github.com",
+    "api_url": "https://api.github.com",
+    "graphql_url": "https://api.github.com/graphql",
+    "ref_name": "release/1.0",
+    "ref_protected": false,
+    "ref_type": "branch",
+    "secret_source": "Actions",
+    "event": {
+      "after": "1d0b9a65c9d0b42072e77f4eb074f69b384c3e47",
+      "base_ref": null,
+      "before": "0000000000000000000000000000000000000000",
+      "commits": [
+        {
+          "author": {
+            "email": "247049124+barbarkaragul-oss@users.noreply.github.com",
+            "name": "barbarkaragul-oss",
+            "username": "barbarkaragul-oss"
+          },
+          "committer": {
+            "email": "247049124+barbarkaragul-oss@users.noreply.github.com",
+            "name": "barbarkaragul-oss",
+            "username": "barbarkaragul-oss"
+          },
+          "distinct": true,
+          "id": "1d0b9a65c9d0b42072e77f4eb074f69b384c3e47",
+          "message": "feat: b",
+          "timestamp": "2026-09-12T14:28:26+03:00",
+          "tree_id": "83b39ee892d65de613f3f6e4517b38abababfbe8",
+          "url": "https://github.com/barbarkaragul-oss/wdmjr-fixtures/commit/1d0b9a65c9d0b42072e77f4eb074f69b384c3e47"
+        }
+      ],
+      "compare": "https://github.com/barbarkaragul-oss/wdmjr-fixtures/commit/1d0b9a65c9d0",
+      "created": true,
+      "deleted": false,
+      "forced": false,
+      "head_commit": {
+        "author": {
+          "email": "247049124+barbarkaragul-oss@users.noreply.github.com",
+          "name": "barbarkaragul-oss",
+          "username": "barbarkaragul-oss"
+        },
+        "committer": {
+          "email": "247049124+barbarkaragul-oss@users.noreply.github.com",
+          "name": "barbarkaragul-oss",
+          "username": "barbarkaragul-oss"
+        },
+        "distinct": true,
+        "id": "1d0b9a65c9d0b42072e77f4eb074f69b384c3e47",
+        "message": "feat: b",
+        "timestamp": "2026-09-12T14:28:26+03:00",
+        "tree_id": "83b39ee892d65de613f3f6e4517b38abababfbe8",
+        "url": "https://github.com/barbarkaragul-oss/wdmjr-fixtures/commit/1d0b9a65c9d0b42072e77f4eb074f69b384c3e47"
+      },
+      "pusher": {
+        "email": "barbarkaragul@gmail.com",
+        "name": "barbarkaragul-oss"
+      },
+      "ref": "refs/heads/release/1.0",
+      "repository": {
+        "allow_forking": true,
+        "archive_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/{archive_format}{/ref}",
+        "archived": false,
+        "assignees_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/assignees{/user}",
+        "blobs_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/git/blobs{/sha}",
+        "branches_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/branches{/branch}",
+        "clone_url": "https://github.com/barbarkaragul-oss/wdmjr-fixtures.git",
+        "collaborators_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/collaborators{/collaborator}",
+        "comments_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/comments{/number}",
+        "commits_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/commits{/sha}",
+        "compare_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/compare/{base}...{head}",
+        "contents_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/contents/{+path}",
+        "contributors_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/contributors",
+        "created_at": 1789212377,
+        "default_branch": "main",
+        "deployments_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/deployments",
+        "description": "Ground-truth runs for Why Didn't My Job Run? (simulator fixtures). Private scratch repo.",
+        "disabled": false,
+        "downloads_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/downloads",
+        "events_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/events",
+        "fork": false,
+        "forks": 0,
+        "forks_count": 0,
+        "forks_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/forks",
+        "full_name": "barbarkaragul-oss/wdmjr-fixtures",
+        "git_commits_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/git/commits{/sha}",
+        "git_refs_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/git/refs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/git/tags{/sha}",
+        "git_url": "git://github.com/barbarkaragul-oss/wdmjr-fixtures.git",
+        "has_discussions": false,
+        "has_downloads": true,
+        "has_issues": false,
+        "has_pages": false,
+        "has_projects": false,
+        "has_pull_requests": true,
+        "has_wiki": false,
+        "homepage": null,
+        "hooks_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/hooks",
+        "html_url": "https://github.com/barbarkaragul-oss/wdmjr-fixtures",
+        "id": 1367232572,
+        "is_template": false,
+        "issue_comment_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/issues/comments{/number}",
+        "issue_events_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/issues/events{/number}",
+        "issues_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/issues{/number}",
+        "keys_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/keys{/key_id}",
+        "labels_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/labels{/name}",
+        "language": null,
+        "languages_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/languages",
+        "license": null,
+        "master_branch": "main",
+        "merges_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/merges",
+        "milestones_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/milestones{/number}",
+        "mirror_url": null,
+        "name": "wdmjr-fixtures",
+        "node_id": "R_kgDOUX5QPA",
+        "notifications_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/notifications{?since,all,participating}",
+        "open_issues": 0,
+        "open_issues_count": 0,
+        "owner": {
+          "avatar_url": "https://avatars.githubusercontent.com/u/247049124?v=4",
+          "email": "barbarkaragul@gmail.com",
+          "events_url": "https://api.github.com/users/barbarkaragul-oss/events{/privacy}",
+          "followers_url": "https://api.github.com/users/barbarkaragul-oss/followers",
+          "following_url": "https://api.github.com/users/barbarkaragul-oss/following{/other_user}",
+          "gists_url": "https://api.github.com/users/barbarkaragul-oss/gists{/gist_id}",
+          "gravatar_id": "",
+          "html_url": "https://github.com/barbarkaragul-oss",
+          "id": 247049124,
+          "login": "barbarkaragul-oss",
+          "name": "barbarkaragul-oss",
+          "node_id": "U_kgDODrmrpA",
+          "organizations_url": "https://api.github.com/users/barbarkaragul-oss/orgs",
+          "received_events_url": "https://api.github.com/users/barbarkaragul-oss/received_events",
+          "repos_url": "https://api.github.com/users/barbarkaragul-oss/repos",
+          "site_admin": false,
+          "starred_url": "https://api.github.com/users/barbarkaragul-oss/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/barbarkaragul-oss/subscriptions",
+          "type": "User",
+          "url": "https://api.github.com/users/barbarkaragul-oss",
+          "user_view_type": "public"
+        },
+        "private": true,
+        "pull_request_creation_policy": "all",
+        "pulls_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/pulls{/number}",
+        "pushed_at": 1789212508,
+        "releases_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/releases{/id}",
+        "size": 0,
+        "ssh_url": "git@github.com:barbarkaragul-oss/wdmjr-fixtures.git",
+        "stargazers": 0,
+        "stargazers_count": 0,
+        "stargazers_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/stargazers",
+        "statuses_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/statuses/{sha}",
+        "subscribers_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/subscribers",
+        "subscription_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/subscription",
+        "svn_url": "https://github.com/barbarkaragul-oss/wdmjr-fixtures",
+        "tags_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/tags",
+        "teams_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/teams",
+        "topics": [],
+        "trees_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/git/trees{/sha}",
+        "updated_at": "2026-09-12T11:27:57Z",
+        "url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures",
+        "visibility": "private",
+        "watchers": 0,
+        "watchers_count": 0,
+        "web_commit_signoff_required": false
+      },
+      "sender": {
+        "avatar_url": "https://avatars.githubusercontent.com/u/247049124?v=4",
+        "events_url": "https://api.github.com/users/barbarkaragul-oss/events{/privacy}",
+        "followers_url": "https://api.github.com/users/barbarkaragul-oss/followers",
+        "following_url": "https://api.github.com/users/barbarkaragul-oss/following{/other_user}",
+        "gists_url": "https://api.github.com/users/barbarkaragul-oss/gists{/gist_id}",
+        "gravatar_id": "",
+        "html_url": "https://github.com/barbarkaragul-oss",
+        "id": 247049124,
+        "login": "barbarkaragul-oss",
+        "node_id": "U_kgDODrmrpA",
+        "organizations_url": "https://api.github.com/users/barbarkaragul-oss/orgs",
+        "received_events_url": "https://api.github.com/users/barbarkaragul-oss/received_events",
+        "repos_url": "https://api.github.com/users/barbarkaragul-oss/repos",
+        "site_admin": false,
+        "starred_url": "https://api.github.com/users/barbarkaragul-oss/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/barbarkaragul-oss/subscriptions",
+        "type": "User",
+        "url": "https://api.github.com/users/barbarkaragul-oss",
+        "user_view_type": "public"
+      }
+    },
+    "workflow_ref": "barbarkaragul-oss/wdmjr-fixtures/.github/workflows/fixture-a.yml@refs/heads/release/1.0",
+    "workflow_sha": "1d0b9a65c9d0b42072e77f4eb074f69b384c3e47",
+    "repository_id": "1367232572",
+    "triggering_actor": "barbarkaragul-oss",
+    "workspace": "/home/runner/work/wdmjr-fixtures/wdmjr-fixtures"
+  },
+  "inputs": {},
+  "jobs": [
+    {
+      "name": "matrix_job (24, true)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"node 24\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo only-22",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run echo experimental",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "context",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"::WDMJR_GITHUB_START::\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "step_ifs",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"x=1\" >> \"$GITHUB_OUTPUT\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo push-only",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo output-one",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo output-one-number",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo on-failure",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run echo always",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "build",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run test \"release/1.0\" != \"fail-build\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "fork_check",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo ok",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "empty_head_ref",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo ok",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "no_skip_deploy_msg",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo ok",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "matrix_job (22)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"node 22\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo only-22",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo experimental",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "skipped_check",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo ok",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "actor_check",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo ok",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "run_attempt_number",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo ok",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "null_eq_false",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo ok",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "dispatch_deploy_bool",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "case_insensitive",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "release_published",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "tag_only",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "not_fork_strict",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "issue_bug",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "pr_number_positive",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "skipped_check_no_always",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "after_build",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo ok",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "not_cancelled",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo ok",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "deploy_anyway",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo ok",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "deploy",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "on_failure",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "main_push",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "dispatch_deploy_str",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "release_label",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "draft_pr",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "dispatch_env_prod",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "contains_ref_feature",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "format_check",
+      "conclusion": "skipped",
+      "steps": []
+    }
+  ]
+}

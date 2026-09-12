@@ -1,0 +1,10 @@
+name: filter-pr-default-types
+on:
+  pull_request:
+    branches: [main]
+    paths: ['src/**']
+jobs:
+  ran:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "action ${{ github.event.action }}"

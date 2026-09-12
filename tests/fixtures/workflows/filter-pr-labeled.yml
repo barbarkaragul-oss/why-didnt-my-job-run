@@ -1,0 +1,9 @@
+name: filter-pr-labeled
+on:
+  pull_request:
+    types: [labeled]
+jobs:
+  ran:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "label ${{ github.event.label.name }}"

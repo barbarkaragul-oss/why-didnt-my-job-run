@@ -1,0 +1,11 @@
+name: filter-tags
+on:
+  push:
+    tags:
+      - 'v*'
+      - '!v*-rc*'
+jobs:
+  ran:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "tag ${{ github.ref_name }}"

@@ -1,0 +1,27 @@
+{
+  "recorded_at": "2026-09-12T11:39:09.100Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34691119030,
+  "workflow": "fixture-hashfiles",
+  "workflow_path": ".github/workflows/fixture-hashfiles.yml",
+  "event": "push",
+  "head_branch": "main",
+  "head_sha": "2d4a66ec5e30936bc3e442c609044a58f49d5126",
+  "conclusion": "failure",
+  "display_title": "Fixture workflows: conditions, filters, matrix, step ifs",
+  "changed_files": [
+    ".github/workflows/filter-branches-ignore.yml",
+    ".github/workflows/filter-branches.yml",
+    ".github/workflows/filter-paths-ignore.yml",
+    ".github/workflows/filter-pr-default-types.yml",
+    ".github/workflows/filter-pr-labeled.yml",
+    ".github/workflows/filter-tags.yml",
+    ".github/workflows/fixture-a.yml",
+    ".github/workflows/fixture-hashfiles.yml",
+    "README.md",
+    "docs/x.md",
+    "package.json",
+    "src/a.txt"
+  ],
+  "jobs": []
+}
