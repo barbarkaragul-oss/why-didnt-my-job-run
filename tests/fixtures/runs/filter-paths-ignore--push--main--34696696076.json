@@ -1,0 +1,39 @@
+{
+  "recorded_at": "2026-09-12T13:33:46.154Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34696696076,
+  "workflow": "filter-paths-ignore",
+  "workflow_path": ".github/workflows/filter-paths-ignore.yml",
+  "event": "push",
+  "head_branch": "main",
+  "head_sha": "62ad7b83d9739d8b3f4393554c8675d1d325d049",
+  "conclusion": "success",
+  "display_title": "Fixtures: needs chain, step-level status functions, invalid filter co…",
+  "changed_files": [
+    ".github/workflows/filter-both.yml",
+    ".github/workflows/filter-negative-only.yml",
+    ".github/workflows/fixture-chain.yml",
+    ".github/workflows/fixture-steps.yml",
+    "notes.txt"
+  ],
+  "jobs": [
+    {
+      "name": "ran",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"ref refs/heads/main\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

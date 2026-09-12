@@ -4,7 +4,7 @@
  * evaluate every job's condition with the results of the jobs it needs.
  */
 import type { ParsedWorkflow, ParsedJob } from './workflow.js';
-import { decideTrigger, validateTriggers, DEFAULT_BRANCH_ONLY, type FilterDecision, type TriggerInput } from './filters.js';
+import { decideTrigger, validateTriggers, triggerWarnings, DEFAULT_BRANCH_ONLY, type FilterDecision, type TriggerInput } from './filters.js';
 import { evaluateCondition, parseExpression, statusFunctions, type EvaluationResult, type EvaluationFailure, type JobResult } from './evaluate.js';
 import { checkAvailability, type AvailabilityProblem } from './availability.js';
 import type { Json } from './context.js';
@@ -21,6 +21,8 @@ export interface JobVerdict {
   /** One-line explanation for the card. */
   headline: string;
   needsResults: Record<string, JobResult>;
+  /** Results of every job upstream (transitive needs); the status functions look at all of them. */
+  ancestorResults: Record<string, JobResult>;
   problems: AvailabilityProblem[];
   stepVerdicts: StepVerdict[];
 }
@@ -31,6 +33,8 @@ export interface StepVerdict {
   if: string | undefined;
   evaluation: EvaluationResult | EvaluationFailure | undefined;
   problems: AvailabilityProblem[];
+  /** Set when the condition reads something the simulation does not know (steps.*, env, matrix, hashFiles). */
+  unknown?: string;
 }
 
 export interface SimulationInput {
@@ -67,17 +71,26 @@ export function simulate(input: SimulationInput): Simulation {
     triggerNotes.push('Pull request from a fork: workflows run with a read-only GITHUB_TOKEN and no secrets unless the repository allows it.');
   }
 
+  triggerNotes.push(...triggerWarnings(workflow));
   const fileProblems = [...workflow.errors, ...validateTriggers(workflow)];
   const { order, graphProblems } = topoOrder(workflow.jobs);
   const rejected = fileProblems.length > 0 || graphProblems.length > 0;
+  const ancestorsOf = new Map<string, Set<string>>();
 
   const results = new Map<string, JobResult>();
   const verdicts = new Map<string, JobVerdict>();
   for (const job of order) {
     const needsResults: Record<string, JobResult> = {};
     for (const n of job.needs) needsResults[n] = results.get(n) ?? 'skipped';
+    const ancestors = new Set<string>();
+    for (const n of job.needs) { ancestors.add(n); for (const a of ancestorsOf.get(n) ?? []) ancestors.add(a); }
+    ancestorsOf.set(job.id, ancestors);
+    const ancestorResults: Record<string, JobResult> = {};
+    for (const a of ancestors) ancestorResults[a] = results.get(a) ?? 'skipped';
+    const needsCtx = Object.fromEntries(Object.entries(needsResults).map(([k, v]) => [k, { result: v }]));
+    const ancestorsCtx = Object.fromEntries(Object.entries(ancestorResults).map(([k, v]) => [k, { result: v }]));
     const problems = availabilityFor(job.if, 'jobs.<job_id>.if', needsResults);
-    const evaluation = evaluateCondition(job.if, input.github, { needs: Object.fromEntries(Object.entries(needsResults).map(([k, v]) => [k, { result: v }])), cancelled: input.cancelled, contexts: { inputs: input.inputs, vars: input.vars ?? {} } });
+    const evaluation = evaluateCondition(job.if, input.github, { needs: needsCtx, ancestors: ancestorsCtx, cancelled: input.cancelled, contexts: { inputs: input.inputs, vars: input.vars ?? {} } });
     let outcome: JobOutcome;
     let result: JobResult;
     let headline: string;
@@ -104,14 +117,20 @@ export function simulate(input: SimulationInput): Simulation {
       headline = forced === 'failure' ? `Runs, and you marked it as failing.` : forced === 'cancelled' ? 'Runs, then is cancelled (simulated).' : job.ifSource ? `Runs: ${evaluation.reason}` : 'Runs: no condition, and every job it needs succeeded.';
     }
     results.set(job.id, result);
-    const stepVerdicts = job.steps.map((s) => ({
-      id: s.id,
-      summary: s.summary,
-      if: s.if,
-      evaluation: s.if ? evaluateCondition(s.if, input.github, { needs: Object.fromEntries(Object.entries(needsResults).map(([k, v]) => [k, { result: v }])), cancelled: input.cancelled, contexts: { inputs: input.inputs, vars: input.vars ?? {}, job: { status: 'success' }, runner: { os: 'Linux', arch: 'X64', name: 'GitHub Actions', temp: '/home/runner/work/_temp' } } }) : undefined,
-      problems: s.if ? availabilityFor(s.if, 'jobs.<job_id>.steps.if', needsResults) : [],
-    }));
-    verdicts.set(job.id, { job, outcome, result, evaluation, headline, needsResults, problems, stepVerdicts });
+    const stepVerdicts: StepVerdict[] = job.steps.map((s) => {
+      // Step-level status functions look at the job's own steps (verified by fixture-steps); every previous step is
+      // assumed to have succeeded. Anything that reads steps.*, env, matrix or hashFiles is unknown here.
+      const unknownRef = s.if ? /\bsteps\.|\benv\.|\bmatrix\.|\bhashFiles\s*\(/.exec(s.if) : null;
+      return {
+        id: s.id,
+        summary: s.summary,
+        if: s.if,
+        evaluation: s.if ? evaluateCondition(s.if, input.github, { needs: needsCtx, ancestors: ancestorsCtx, stepStatus: 'success', cancelled: input.cancelled, contexts: { inputs: input.inputs, vars: input.vars ?? {}, job: { status: 'success' }, runner: { os: 'Linux', arch: 'X64', name: 'GitHub Actions', temp: '/home/runner/work/_temp' } } }) : undefined,
+        problems: s.if ? availabilityFor(s.if, 'jobs.<job_id>.steps.if', needsResults) : [],
+        unknown: unknownRef ? `reads ${unknownRef[0].replace(/\s*\($/, '()')}, which the simulation does not know (step outputs, env, matrix and hashFiles are not simulated)` : undefined,
+      };
+    });
+    verdicts.set(job.id, { job, outcome, result, evaluation, headline, needsResults, ancestorResults, problems, stepVerdicts });
   }
   return { trigger, triggerNotes, fileProblems, jobs: order.map((j) => verdicts.get(j.id)!), graphProblems, rejected };
 }

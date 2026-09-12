@@ -1,0 +1,36 @@
+{
+  "recorded_at": "2026-09-12T13:35:50.139Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34696829924,
+  "workflow": "filter-branches-ignore",
+  "workflow_path": ".github/workflows/filter-branches-ignore.yml",
+  "event": "push",
+  "head_branch": "main",
+  "head_sha": "5614d1acbf7d2d7bc86377b16ec449c588a771ea",
+  "conclusion": "success",
+  "display_title": "Fixture: success() after a skipped-by-condition ancestor",
+  "changed_files": [
+    ".github/workflows/fixture-chain2.yml",
+    "notes.txt"
+  ],
+  "jobs": [
+    {
+      "name": "ran",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"ref refs/heads/main\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

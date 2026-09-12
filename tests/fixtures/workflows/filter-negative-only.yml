@@ -1,0 +1,11 @@
+# Docs: a filter with only negative patterns. Rejected file, or just no run?
+name: filter-negative-only
+on:
+  push:
+    paths:
+      - '!docs/**'
+jobs:
+  ran:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ran

@@ -1,0 +1,95 @@
+# Ground truth for status functions across a needs chain: a fails, b (needs a) is skipped,
+# what do failure()/success()/always()/!cancelled() do one, two and three hops away?
+name: chain
+on: push
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 1
+  b:
+    needs: a
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo b
+  c_failure_via_b:
+    needs: b
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "b=${{ needs.b.result }}"
+  d_direct_failure:
+    needs: a
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo d
+  e_always_b_skipped:
+    needs: b
+    if: always() && needs.b.result == 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo e
+  f_not_cancelled:
+    needs: b
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo f
+  g_success:
+    needs: b
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo g
+  h_after_c:
+    needs: c_failure_via_b
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "c=${{ needs.c_failure_via_b.result }}"
+  i_three_deep_failure:
+    needs: h_after_c
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo i
+  i2_three_deep_success:
+    needs: h_after_c
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo i2
+  i3_three_deep_no_if:
+    needs: h_after_c
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo i3
+  j_failure_or_success:
+    needs: b
+    if: failure() || success()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo j
+  ok:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+  k_mixed_needs_failure:
+    needs: [ok, b]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo k
+  l_mixed_needs_success:
+    needs: [ok, b]
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo l
+  m_after_ok_failure:
+    needs: ok
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo m

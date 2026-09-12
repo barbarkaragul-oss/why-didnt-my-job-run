@@ -1,0 +1,231 @@
+{
+  "recorded_at": "2026-09-12T13:33:47.061Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34696696055,
+  "workflow": "fixture-chain",
+  "workflow_path": ".github/workflows/fixture-chain.yml",
+  "event": "push",
+  "head_branch": "main",
+  "head_sha": "62ad7b83d9739d8b3f4393554c8675d1d325d049",
+  "conclusion": "failure",
+  "display_title": "Fixtures: needs chain, step-level status functions, invalid filter co…",
+  "changed_files": [
+    ".github/workflows/filter-both.yml",
+    ".github/workflows/filter-negative-only.yml",
+    ".github/workflows/fixture-chain.yml",
+    ".github/workflows/fixture-steps.yml",
+    "notes.txt"
+  ],
+  "jobs": [
+    {
+      "name": "ok",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo ok",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "a",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run exit 1",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "m_after_ok_failure",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "d_direct_failure",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo d",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "c_failure_via_b",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"b=skipped\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "j_failure_or_success",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo j",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "k_mixed_needs_failure",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo k",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "e_always_b_skipped",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo e",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "f_not_cancelled",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo f",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "g_success",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "b",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "l_mixed_needs_success",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "h_after_c",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"c=success\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "i_three_deep_failure",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo i",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "i2_three_deep_success",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "i3_three_deep_no_if",
+      "conclusion": "skipped",
+      "steps": []
+    }
+  ]
+}

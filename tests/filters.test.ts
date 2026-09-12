@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { compilePattern, matchPatterns, matchPaths, decideTrigger, validateTriggers } from '../src/engine/filters.js';
+import { compilePattern, matchPatterns, matchPaths, decideTrigger, validateTriggers, triggerWarnings } from '../src/engine/filters.js';
 import { parseWorkflowFile } from '../src/engine/workflow.js';
 
 interface Docs {
@@ -64,10 +64,12 @@ test('documented rules the cheat sheet states in prose', () => {
 test('on: validation catches the combinations the docs forbid', async () => {
   const wf = await parseWorkflowFile(`on:\n  push:\n    branches: [main]\n    branches-ignore: [dev]\n    paths: ['!docs/**']\n  release:\n    branches: [main]\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps: [{ run: echo }]\n`);
   const problems = validateTriggers(wf);
-  assert.ok(problems.some((p) => p.includes('branches and branches-ignore')));
-  assert.ok(problems.some((p) => p.includes('only negative patterns')));
-  // release has no branches filter: either GitHub's own schema rejects the key or our validator reports it
-  assert.ok(problems.some((p) => p.includes('on.release.branches')) || wf.errors.some((e) => /branches/.test(e)), JSON.stringify({ problems, errors: wf.errors }));
+  const warnings = triggerWarnings(wf);
+  assert.ok(problems.some((p) => p.includes('branches and branches-ignore')), 'verified rejection');
+  assert.ok(!problems.some((p) => p.includes('only negative')), 'a negative-only list is not a rejection: GitHub creates no run at all');
+  assert.ok(warnings.some((p) => p.includes('only negative patterns')));
+  // release has no branches filter: either GitHub's own schema rejects the key or our validator warns
+  assert.ok(warnings.some((p) => p.includes('on.release.branches')) || wf.errors.some((e) => /branches/.test(e)), JSON.stringify({ warnings, errors: wf.errors }));
 });
 
 test('default activity types: pull_request defaults to opened/synchronize/reopened, other events to all', async () => {

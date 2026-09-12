@@ -1,0 +1,55 @@
+# Ground truth for success() across a chain where an ancestor was skipped by its own condition (no failure anywhere):
+# x skipped by if, y (needs x, always()) runs, z (needs y) -> runs or skipped?
+name: chain2
+on: push
+jobs:
+  x_skipped_by_if:
+    if: github.ref_name == 'never-this-branch'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo x
+  y_always_after_x:
+    needs: x_skipped_by_if
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "x=${{ needs.x_skipped_by_if.result }}"
+  z_no_if_after_y:
+    needs: y_always_after_x
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo z
+  z2_success_after_y:
+    needs: y_always_after_x
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo z2
+  z3_failure_after_y:
+    needs: y_always_after_x
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo z3
+  w_not_cancelled_after_x:
+    needs: x_skipped_by_if
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo w
+  v_no_if_after_x:
+    needs: x_skipped_by_if
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo v
+  u_after_v:
+    needs: v_no_if_after_x
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "v=${{ needs.v_no_if_after_x.result }}"
+  t_no_if_after_u:
+    needs: u_after_v
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo t

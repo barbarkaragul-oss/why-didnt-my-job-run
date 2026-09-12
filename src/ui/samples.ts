@@ -90,7 +90,7 @@ jobs:
   {
     id: 'skipped-needs',
     title: 'A skipped job skips everything after it',
-    blurb: 'lint is skipped on tags, so test (which needs lint) is skipped too, even though test has no condition. The report job shows the two ways out.',
+    blurb: 'lint is skipped on tags, so test (which needs lint) is skipped too, even though test has no condition. The report job shows the two ways out, and after-report shows that always() rescues only the job it is on: status functions look at every ancestor (verified with real runs).',
     yaml: `name: Pipeline
 on:
   push:
@@ -120,6 +120,12 @@ jobs:
     if: always() && needs.test.result == 'success'
     runs-on: ubuntu-latest
     steps: [{ run: echo ok }]
+
+  after-report:
+    needs: report
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "report ran, but lint was skipped upstream"
 `,
     scenario: { event: 'push', refType: 'tag', tag: 'v1.2.0' },
   },

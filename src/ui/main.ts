@@ -267,6 +267,8 @@ function renderJob(v: JobVerdict): HTMLElement {
   }
   if (job.needs.length) {
     card.append(h('div', { class: 'needs' }, 'needs: ', ...job.needs.map((n) => h('span', { class: 'chip', text: `${n} → ${v.needsResults[n] ?? '?'}` }))));
+    const upstream = Object.entries(v.ancestorResults).filter(([id, r]) => !job.needs.includes(id) && r !== 'success');
+    if (upstream.length) card.append(h('div', { class: 'needs' }, 'further upstream: ', ...upstream.map(([id, r]) => h('span', { class: 'chip', text: `${id} → ${r}` })), h('span', { class: 'muted', text: 'status functions look at every ancestor' })));
   }
   const ifLine = h('code', { class: 'expr' });
   if (job.ifSource) {
@@ -284,9 +286,10 @@ function renderJob(v: JobVerdict): HTMLElement {
     const list = h('ul', { class: 'steps' });
     for (const s of v.stepVerdicts) {
       const ev = s.evaluation;
-      const pill = !s.if ? h('span', { class: 'pill runs', text: 'runs' }) : ev && ev.ok ? h('span', { class: `pill ${ev.truthy ? 'runs' : 'skipped'}`, text: ev.truthy ? 'runs' : 'skipped' }) : h('span', { class: 'pill blocked', text: 'unknown' });
+      const pill = !s.if ? h('span', { class: 'pill runs', text: 'runs' }) : s.unknown ? h('span', { class: 'pill blocked', text: 'unknown' }) : ev && ev.ok ? h('span', { class: `pill ${ev.truthy ? 'runs' : 'skipped'}`, text: ev.truthy ? 'runs' : 'skipped' }) : h('span', { class: 'pill blocked', text: 'unknown' });
       const li = h('li', {}, pill, h('code', { text: s.summary || s.id }), s.if ? h('span', { class: 'muted', text: `if: ${s.if}` }) : null);
-      if (ev && ev.ok && s.if) li.append(h('span', { class: 'muted', text: `→ ${ev.reason}` }));
+      if (s.unknown) li.append(h('span', { class: 'muted', text: `→ ${s.unknown}` }));
+      else if (ev && ev.ok && s.if) li.append(h('span', { class: 'muted', text: `→ ${ev.reason}` }));
       if (ev && !ev.ok) li.append(h('span', { class: 'muted', text: ev.error }));
       for (const p of s.problems) li.append(h('span', { class: 'problem', text: p.message }));
       list.append(li);

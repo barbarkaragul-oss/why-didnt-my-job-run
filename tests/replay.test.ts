@@ -24,7 +24,7 @@ interface Fixture {
   github?: Record<string, unknown>;
   inputs?: Record<string, unknown>;
   changed_files?: string[];
-  jobs: Array<{ name: string; conclusion: string | null }>;
+  jobs: Array<{ name: string; conclusion: string | null; steps?: Array<{ name: string; conclusion: string | null }> }>;
 }
 
 const RUNS = path.resolve('tests/fixtures/runs');
@@ -151,4 +151,93 @@ test('replay fixture-hashfiles: a rejected file is a failed run with no jobs, on
     assert.ok(sim.jobs.length > 0);
     assert.deepEqual(sim.jobs.map((j) => j.outcome), sim.jobs.map(() => 'rejected'), `run ${fx.run_id}`);
   }
+});
+
+// Status functions across a needs chain (fixture-chain: a fails; fixture-chain2: x is skipped by its own condition)
+// and at step level (fixture-steps). Recorded job conclusions, replayed through simulate() with the recorded
+// failures forced. What the runs showed: success() is false when ANY ancestor was skipped or failed, even three
+// hops away and even when the direct need succeeded, so always() rescues only the job it is on; failure() is true
+// when any ancestor failed, even when the direct need was skipped.
+const ran = (v: { outcome: string }) => v.outcome === 'runs' || v.outcome === 'fails';
+async function replayPush(name: string, fx: Fixture) {
+  const wf = await loadWorkflow(name);
+  assert.deepEqual(wf.errors, []);
+  const forced: Record<string, JobResult> = {};
+  for (const j of fx.jobs) if (j.conclusion === 'failure') forced[baseJobName(j.name)] = 'failure';
+  const state: ScenarioState = { ...DEFAULT_STATE, event: 'push', refType: 'branch', branch: fx.head_branch ?? 'main', changedFiles: (fx.changed_files ?? []).join('\n') };
+  const inputs = toEngineInputs(state, wf);
+  return simulate({ workflow: wf, github: inputs.github, inputs: inputs.inputs, trigger: inputs.trigger, forcedResults: forced });
+}
+for (const name of ['fixture-chain', 'fixture-chain2', 'fixture-steps']) {
+  test(`replay ${name}: every job's run/skip matches GitHub (status functions look at every ancestor)`, async () => {
+    const runs = fixtures.filter((f) => f.workflow === name);
+    assert.ok(runs.length >= 1, `no recording of ${name}`);
+    for (const fx of runs) {
+      const sim = await replayPush(name, fx);
+      assert.equal(sim.trigger.matched, true);
+      const mismatches: string[] = [];
+      for (const j of fx.jobs) {
+        const v = sim.jobs.find((x) => x.job.id === baseJobName(j.name));
+        assert.ok(v, `job ${j.name} is not in the parsed workflow`);
+        const expected = j.conclusion !== 'skipped';
+        if (ran(v) !== expected) mismatches.push(`${v.job.id}: simulator says ${ran(v) ? 'run' : 'skip'} (${v.headline}), GitHub ${expected ? 'ran it' : 'skipped it'}`);
+      }
+      assert.deepEqual(mismatches, [], `run ${fx.run_id}`);
+    }
+  });
+}
+
+test('replay fixture-steps: step-level success()/failure() look at the job\'s own steps, not at needs', async () => {
+  const fx = fixtures.find((f) => f.workflow === 'fixture-steps');
+  assert.ok(fx, 'no recording of fixture-steps');
+  const sim = await replayPush('fixture-steps', fx);
+  const recordedStep = (jobName: string, echo: string) => fx.jobs.find((j) => j.name === jobName)!.steps!.find((s) => s.name === `Run echo ${echo}`)!.conclusion;
+  const truthy = (v: { evaluation?: { ok: boolean; truthy?: boolean } }) => v.evaluation && v.evaluation.ok ? (v.evaluation as { truthy: boolean }).truthy : undefined;
+  // steps_after_failed_need: if: always() after a failed need; recorded: n1 (failure()) skipped, n2 (success()) ran, n3 (needs.x.result) ran
+  const after = sim.jobs.find((j) => j.job.id === 'steps_after_failed_need')!;
+  assert.equal(after.outcome, 'runs');
+  const byId = Object.fromEntries(after.stepVerdicts.map((s) => [s.id, s]));
+  assert.equal(recordedStep('steps_after_failed_need', 'n1'), 'skipped');
+  assert.equal(truthy(byId['n1_failure']!), false, 'failure() at step level ignores the failed need');
+  assert.equal(recordedStep('steps_after_failed_need', 'n2'), 'success');
+  assert.equal(truthy(byId['n2_success']!), true, 'success() at step level ignores the failed need');
+  assert.equal(recordedStep('steps_after_failed_need', 'n3'), 'success');
+  assert.equal(truthy(byId['n3_needs']!), true, 'the needs context is still there');
+  // steps_continue: s1 fails with continue-on-error (recorded conclusion success); s2 (failure()) skipped, s3 (success()) ran,
+  // s4/s5 read steps.s1.* which the simulation does not know
+  const cont = sim.jobs.find((j) => j.job.id === 'steps_continue')!;
+  const c = Object.fromEntries(cont.stepVerdicts.map((s) => [s.id, s]));
+  assert.equal(recordedStep('steps_continue', 's2'), 'skipped');
+  assert.equal(truthy(c['s2_failure']!), false);
+  assert.equal(recordedStep('steps_continue', 's3'), 'success');
+  assert.equal(truthy(c['s3_success']!), true);
+  assert.match(c['s4_outcome']!.unknown ?? '', /steps\./);
+  assert.match(c['s5_conclusion']!.unknown ?? '', /steps\./);
+  assert.equal(c['s4_outcome']!.unknown === undefined, false, 'a step that reads steps.* is unknown, not a confident verdict');
+});
+
+// filter-both has branches and branches-ignore on the same event: every recorded push produced a failed run with no jobs.
+test('replay filter-both: branches with branches-ignore is a rejected file (failed run, no jobs)', async () => {
+  const runs = fixtures.filter((f) => f.workflow === 'filter-both');
+  assert.ok(runs.length >= 1, 'no recording of filter-both');
+  for (const fx of runs) { assert.equal(fx.conclusion, 'failure'); assert.deepEqual(fx.jobs, []); }
+  const sim = await replayPush('filter-both', runs[0]!);
+  assert.equal(sim.rejected, true);
+  assert.ok(sim.fileProblems.some((p) => /branches and branches-ignore/.test(p)), JSON.stringify(sim.fileProblems));
+});
+
+// filter-negative-only has paths: ['!docs/**'] only. On the pushes that produced the filter-both and fixture-chain
+// recordings (commits 62ad7b8 and 5614d1a, which changed notes.txt and workflow files, nothing under docs/),
+// GitHub created no run for it at all: not a failed one, none. So it is not a rejected file; nothing matches.
+test('filter-negative-only: a list with only negative patterns produces no run at all (not a rejected file)', async () => {
+  assert.equal(fixtures.filter((f) => f.workflow === 'filter-negative-only').length, 0, 'GitHub created no run for this workflow');
+  assert.ok(fixtures.some((f) => f.workflow === 'filter-both' && f.head_sha.startsWith('62ad7b8')), 'the sibling workflow did run on that push');
+  const wf = await loadWorkflow('filter-negative-only');
+  const state: ScenarioState = { ...DEFAULT_STATE, event: 'push', refType: 'branch', branch: 'main', changedFiles: 'notes.txt' };
+  const inputs = toEngineInputs(state, wf);
+  const sim = simulate({ workflow: wf, github: inputs.github, inputs: inputs.inputs, trigger: inputs.trigger });
+  assert.equal(sim.rejected, false);
+  assert.equal(sim.trigger.matched, false);
+  assert.ok(sim.trigger.reasons.some((r) => /only negative/.test(r)), JSON.stringify(sim.trigger.reasons));
+  assert.ok(sim.triggerNotes.some((n) => /only negative patterns/.test(n)), JSON.stringify(sim.triggerNotes));
 });

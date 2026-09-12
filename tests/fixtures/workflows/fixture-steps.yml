@@ -1,0 +1,57 @@
+# Ground truth for step-level status functions: they reflect the job's own steps, not needs.
+name: steps
+on: push
+jobs:
+  steps_continue:
+    runs-on: ubuntu-latest
+    steps:
+      - id: s1
+        run: exit 1
+        continue-on-error: true
+      - id: s2_failure
+        if: failure()
+        run: echo s2
+      - id: s3_success
+        if: success()
+        run: echo s3
+      - id: s4_outcome
+        if: steps.s1.outcome == 'failure'
+        run: echo s4
+      - id: s5_conclusion
+        if: steps.s1.conclusion == 'success'
+        run: echo s5
+      - id: s6_always
+        if: always()
+        run: echo s6
+  steps_fail:
+    runs-on: ubuntu-latest
+    steps:
+      - id: f1
+        run: exit 1
+      - id: f2_failure
+        if: failure()
+        run: echo f2
+      - id: f3_success
+        if: success()
+        run: echo f3
+      - id: f4_always
+        if: always()
+        run: echo f4
+      - id: f5_no_if
+        run: echo f5
+  steps_after_failed_need:
+    needs: steps_fail
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - id: n1_failure
+        if: failure()
+        run: echo n1
+      - id: n2_success
+        if: success()
+        run: echo n2
+      - id: n3_needs
+        if: needs.steps_fail.result == 'failure'
+        run: echo n3
+      - id: n4_no_if
+        run: echo n4

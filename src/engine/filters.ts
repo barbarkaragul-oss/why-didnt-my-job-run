@@ -63,18 +63,27 @@ export function validateTriggers(workflow: ParsedWorkflow): string[] {
   for (const [event, raw] of Object.entries(workflow.events as Record<string, unknown>)) {
     const cfg = (raw ?? {}) as Record<string, unknown>;
     for (const [a, b] of [['branches', 'branches-ignore'], ['tags', 'tags-ignore'], ['paths', 'paths-ignore']] as const) {
-      if (cfg[a] !== undefined && cfg[b] !== undefined) problems.push(`on.${event}: ${a} and ${b} cannot both be used for the same event (docs: workflow syntax).`);
-    }
-    for (const key of ['branches', 'tags', 'paths'] as const) {
-      const list = asStrings(cfg[key]);
-      if (list.length && list.every((p) => p.startsWith('!'))) problems.push(`on.${event}.${key}: a list with only negative patterns is not allowed; add at least one pattern without ! or use ${key}-ignore.`);
-    }
-    const allowed = FILTERS_BY_EVENT[event];
-    for (const key of Object.keys(cfg)) {
-      if (['branches', 'branches-ignore', 'tags', 'tags-ignore', 'paths', 'paths-ignore'].includes(key) && !(allowed ?? []).includes(key)) problems.push(`on.${event}.${key}: this filter is not documented for ${event}; GitHub ignores it or rejects the file.`);
+      if (cfg[a] !== undefined && cfg[b] !== undefined) problems.push(`on.${event}: ${a} and ${b} cannot both be used for the same event (docs: workflow syntax; verified: GitHub creates a failed run with no jobs).`);
     }
   }
   return problems;
+}
+
+/** Things the docs frown on that are not verified rejections: reported as notes on the trigger card, not as a rejected file. */
+export function triggerWarnings(workflow: ParsedWorkflow): string[] {
+  const warnings: string[] = [];
+  for (const [event, raw] of Object.entries(workflow.events as Record<string, unknown>)) {
+    const cfg = (raw ?? {}) as Record<string, unknown>;
+    for (const key of ['branches', 'tags', 'paths'] as const) {
+      const list = asStrings(cfg[key]);
+      if (list.length && list.every((p) => p.startsWith('!'))) warnings.push(`on.${event}.${key} has only negative patterns: nothing can match, and GitHub creates no run at all (verified with a real push). Add a pattern without ! or use ${key}-ignore.`);
+    }
+    const allowed = FILTERS_BY_EVENT[event];
+    for (const key of Object.keys(cfg)) {
+      if (['branches', 'branches-ignore', 'tags', 'tags-ignore', 'paths', 'paths-ignore'].includes(key) && !(allowed ?? []).includes(key)) warnings.push(`on.${event}.${key}: this filter is not documented for ${event}; not verified what GitHub does with it.`);
+    }
+  }
+  return warnings;
 }
 
 /** Compile one GitHub filter pattern into an anchored RegExp. */
@@ -160,7 +169,7 @@ export function matchPatterns(patterns: string[], name: string): { matched: bool
   const hasPositive = patterns.some((p) => !p.startsWith('!'));
   if (!hasPositive && patterns.length) {
     // Docs: a list with only negative patterns still needs a positive one; GitHub treats it as matching nothing.
-    trace.push('only negative patterns: nothing can match (the docs require at least one pattern without !)');
+    trace.push('only negative patterns: nothing can match (the docs require at least one pattern without !; verified: GitHub creates no run at all)');
   }
   for (const p of patterns) {
     const negative = p.startsWith('!');
@@ -180,6 +189,7 @@ export function matchPaths(patterns: string[], files: string[], ignore: boolean)
     return { matched: ignore, trace };
   }
   let any = false;
+  if (!ignore && patterns.length && patterns.every((p) => p.startsWith('!'))) trace.push('only negative patterns: nothing can match (verified: GitHub creates no run at all for this workflow)');
   for (const f of files) {
     const r = matchPatterns(patterns, f);
     const included = ignore ? !r.matched : r.matched;

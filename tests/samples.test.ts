@@ -65,8 +65,10 @@ test('skipped-needs: on a tag push lint is skipped, so test is skipped without a
   assert.match(tag.reason['test']!, /lint was skipped/);
   assert.equal(tag.outcome['report'], 'runs');
   assert.equal(tag.outcome['report-only-if-test-ran'], 'skipped');
+  assert.equal(tag.outcome['after-report'], 'skipped', 'always() rescues report only; after-report still sees the skipped ancestor');
+  assert.match(tag.reason['after-report']!, /lint \(upstream\) was skipped/);
   const branch = await run('skipped-needs', { refType: 'branch', branch: 'feature/a' });
-  assert.deepEqual(branch.outcome, { lint: 'runs', test: 'runs', report: 'runs', 'report-only-if-test-ran': 'runs' });
+  assert.deepEqual(branch.outcome, { lint: 'runs', test: 'runs', report: 'runs', 'report-only-if-test-ran': 'runs', 'after-report': 'runs' });
 });
 
 test('dispatch-inputs: boolean input compares as a boolean in `inputs` and as a string in github.event.inputs', async () => {
@@ -101,4 +103,16 @@ test('hashfiles-job-if: the job-level hashFiles is reported as something GitHub 
   const fine = r.sim.jobs.find((j) => j.job.id === 'fine')!;
   assert.deepEqual(fine.problems, []);
   assert.deepEqual(fine.stepVerdicts.flatMap((s) => s.problems), []);
+});
+
+test('push: typed changed files do not leak into github.event (Actions payloads carry no file lists)', async () => {
+  const r = await run('paths-filter', { changedFiles: 'docs/guide.md\nsrc/app.ts' });
+  const sample = SAMPLES.find((s) => s.id === 'paths-filter')!;
+  const state: ScenarioState = { ...DEFAULT_STATE, ...(sample.scenario as Partial<ScenarioState>), changedFiles: 'docs/guide.md\nsrc/app.ts' };
+  const inputs = toEngineInputs(state, r.workflow);
+  const event = inputs.github['event'] as Record<string, unknown>;
+  const head = event['head_commit'] as Record<string, unknown>;
+  for (const k of ['added', 'modified', 'removed']) assert.equal(k in head, false, `head_commit.${k} must be absent`);
+  for (const c of event['commits'] as Array<Record<string, unknown>>) for (const k of ['added', 'modified', 'removed']) assert.equal(k in c, false, `commits[].${k} must be absent`);
+  assert.deepEqual(inputs.trigger.changedFiles, ['docs/guide.md', 'src/app.ts']);
 });

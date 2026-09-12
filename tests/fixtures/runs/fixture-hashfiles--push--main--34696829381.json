@@ -1,0 +1,17 @@
+{
+  "recorded_at": "2026-09-12T13:35:51.505Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34696829381,
+  "workflow": "fixture-hashfiles",
+  "workflow_path": ".github/workflows/fixture-hashfiles.yml",
+  "event": "push",
+  "head_branch": "main",
+  "head_sha": "5614d1acbf7d2d7bc86377b16ec449c588a771ea",
+  "conclusion": "failure",
+  "display_title": "Fixture: success() after a skipped-by-condition ancestor",
+  "changed_files": [
+    ".github/workflows/fixture-chain2.yml",
+    "notes.txt"
+  ],
+  "jobs": []
+}

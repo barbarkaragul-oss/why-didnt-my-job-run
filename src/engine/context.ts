@@ -105,11 +105,13 @@ export function buildGithubContext(payload: Json, sc: Scenario): BuiltContext {
       const ref = sc.tag ? `refs/tags/${sc.tag}` : `refs/heads/${sc.branch ?? defaultBranch}`;
       p['ref'] = ref;
       if (sc.commitMessage !== undefined) setPath(p, ['head_commit', 'message'], sc.commitMessage);
-      if (sc.changedFiles) {
-        setPath(p, ['head_commit', 'modified'], sc.changedFiles);
-        setPath(p, ['head_commit', 'added'], []);
-        setPath(p, ['head_commit', 'removed'], []);
+      // The webhook example carries per-commit file lists, but the payload GitHub hands to Actions does not
+      // (recorded head_commit keys: author, committer, distinct, id, message, timestamp, tree_id, url). Typed
+      // changed files feed the paths filter only; github.event must look like what a workflow really sees.
+      for (const c of [p['head_commit'], ...(Array.isArray(p['commits']) ? (p['commits'] as unknown[]) : [])]) {
+        if (c && typeof c === 'object') for (const k of ['added', 'modified', 'removed']) delete (c as Record<string, unknown>)[k];
       }
+      notes.push('push: github.event.head_commit and github.event.commits carry no added/modified/removed lists in Actions (they are stripped from the webhook payload); paths filters use the files you typed.');
       setRef(ref, str(p['after']) ?? ZERO_SHA);
       gh['base_ref'] = str(p['base_ref']) ?? '';
       notes.push(`push: github.ref is the pushed ref (${ref}); github.sha is the commit after the push.`);

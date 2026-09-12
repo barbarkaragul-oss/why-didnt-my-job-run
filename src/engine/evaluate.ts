@@ -17,10 +17,23 @@ export type JobResult = 'success' | 'failure' | 'cancelled' | 'skipped';
 export const CONTEXT_NAMES = ['github', 'needs', 'inputs', 'vars', 'secrets', 'env', 'matrix', 'strategy', 'runner', 'job', 'steps'];
 
 export interface EvaluationOptions {
-  /** Results of the jobs this job depends on (direct `needs`). */
+  /** Results of the jobs this job depends on (direct `needs`); this is the needs context. */
   needs: Record<string, { result: JobResult; outputs?: Record<string, string> }>;
+  /**
+   * Results of every job upstream of this one, transitively. Recorded runs (fixture-chain, fixture-chain2) show the
+   * job-level status functions look at all of them: success() is false when any ancestor was skipped, failed or
+   * cancelled, even three hops away and even when the direct need succeeded; failure() is true when any ancestor
+   * failed, even when the direct need was skipped. Defaults to `needs`.
+   */
+  ancestors?: Record<string, { result: JobResult }>;
   /** Whether the workflow run was cancelled (affects cancelled() and success()). */
   cancelled?: boolean;
+  /**
+   * For a step condition: the status of the job's own previous steps. Recorded runs (fixture-steps) show step-level
+   * success()/failure() look at the job's steps, not at needs: in an always() job after a failed need, a step with
+   * if: failure() is skipped and one with if: success() runs.
+   */
+  stepStatus?: 'success' | 'failure';
   /** Extra contexts: inputs, vars, env, matrix, steps, job, runner. */
   contexts?: Partial<Record<string, Json>>;
 }
@@ -54,12 +67,15 @@ const toData = (obj: unknown): data.ExpressionData => JSON.parse(JSON.stringify(
 const bool = (b: boolean) => new data.BooleanData(b);
 
 export function statusFunctions(opts: EvaluationOptions): Map<string, FunctionDefinition> {
-  const results = Object.values(opts.needs).map((n) => n.result);
+  const results = Object.values(opts.ancestors ?? opts.needs).map((n) => n.result);
   const cancelled = Boolean(opts.cancelled);
+  // Job level: every ancestor must be success for success(); any failed ancestor makes failure() true (verified by runs).
+  // Step level: the job's own step status (all previous steps assumed to have succeeded unless told otherwise).
+  const success = opts.stepStatus ? !cancelled && opts.stepStatus === 'success' : !cancelled && results.every((r) => r === 'success');
+  const failure = opts.stepStatus ? opts.stepStatus === 'failure' : results.some((r) => r === 'failure');
   const defs: FunctionDefinition[] = [
-    // "success(): none of the previous jobs have failed or been cancelled" (skipped needs count as not successful)
-    { name: 'success', minArgs: 0, maxArgs: 0, call: () => bool(!cancelled && results.every((r) => r === 'success')) },
-    { name: 'failure', minArgs: 0, maxArgs: 0, call: () => bool(results.some((r) => r === 'failure')) },
+    { name: 'success', minArgs: 0, maxArgs: 0, call: () => bool(success) },
+    { name: 'failure', minArgs: 0, maxArgs: 0, call: () => bool(failure) },
     { name: 'cancelled', minArgs: 0, maxArgs: 0, call: () => bool(cancelled) },
     { name: 'always', minArgs: 0, maxArgs: 0, call: () => bool(true) },
     { name: 'hashFiles', minArgs: 1, maxArgs: 255, call: () => new data.StringData('') },
@@ -110,11 +126,16 @@ export function evaluateCondition(expression: string, github: Json, opts: Evalua
   // Status functions are only as informative as the needs behind them: say which job did it.
   const m = /^(success|failure|cancelled)\(\) is (true|false)$/.exec(reason);
   if (m) {
-    const bad = Object.entries(opts.needs).filter(([, n]) => n.result !== 'success').map(([id, n]) => `${id} ${n.result === 'skipped' ? 'was skipped' : n.result === 'failure' ? 'failed' : 'was cancelled'}`);
-    if (m[1] === 'success' && m[2] === 'false') reason = opts.cancelled ? 'success() is false because the run was cancelled' : bad.length ? `success() is false because ${bad.join(', ')}` : reason;
+    const scope = opts.ancestors ?? opts.needs;
+    const bad = Object.entries(scope).filter(([, n]) => n.result !== 'success').map(([id, n]) => `${id}${id in opts.needs ? '' : ' (upstream)'} ${n.result === 'skipped' ? 'was skipped' : n.result === 'failure' ? 'failed' : 'was cancelled'}`);
+    if (opts.stepStatus) {
+      if (m[1] === 'success') reason = m[2] === 'true' ? 'success() is true: no previous step of this job failed' : 'success() is false: a previous step of this job failed';
+      else if (m[1] === 'failure') reason = m[2] === 'true' ? 'failure() is true: a previous step of this job failed' : 'failure() is false: no previous step of this job failed (step-level status functions ignore needs)';
+    }
+    else if (m[1] === 'success' && m[2] === 'false') reason = opts.cancelled ? 'success() is false because the run was cancelled' : bad.length ? `success() is false because ${bad.join(', ')}` : reason;
     else if (m[1] === 'failure' && m[2] === 'true') reason = `failure() is true because ${bad.filter((b) => b.endsWith('failed')).join(', ') || bad.join(', ')}`;
-    else if (m[1] === 'failure' && m[2] === 'false') reason = Object.keys(opts.needs).length ? 'failure() is false: no job it needs failed' : 'failure() is false: the job needs nothing that could have failed';
-    else if (m[1] === 'success' && m[2] === 'true') reason = Object.keys(opts.needs).length ? 'success() is true: every job it needs succeeded' : 'success() is true: the job needs nothing';
+    else if (m[1] === 'failure' && m[2] === 'false') reason = Object.keys(scope).length ? 'failure() is false: no job upstream failed' : 'failure() is false: the job needs nothing that could have failed';
+    else if (m[1] === 'success' && m[2] === 'true') reason = Object.keys(scope).length ? 'success() is true: every job upstream succeeded' : 'success() is true: the job needs nothing';
   }
   return { ok: true, truthy, value: displayValue(value), kind: kindStr(value.kind), subValues, reason };
 }

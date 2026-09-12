@@ -1,0 +1,11 @@
+# Docs: branches and branches-ignore cannot both be used for the same event. Rejected file, or just no run?
+name: filter-both
+on:
+  push:
+    branches: [main]
+    branches-ignore: [dev]
+jobs:
+  ran:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ran
