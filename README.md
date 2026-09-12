@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="https://barbarkaragul-oss.github.io/why-didnt-my-job-run/"><img src="docs/screenshot.png" alt="The simulator: a workflow on the left, the event and scenario in the middle, and on the right each job marked runs or skipped with the reason and the value of every sub-expression" width="900"></a>
+  <a href="https://barbarkaragul-oss.github.io/why-didnt-my-job-run/"><img src="docs/demo.gif" alt="Switching the sample workflow and the event: a push to main runs build, deploy and notify; the fork check runs on a push because null == false is true; a pull_request assigned event does not trigger the workflow; a docs-only push is filtered out by paths-ignore" width="900"></a>
 </p>
 
 Every GitHub Actions user has stared at a grey "skipped" job and asked why. The usual answer is a dozen "test ci" commits. This page answers in a second: paste the workflow, choose `push` to `main` or a `pull_request` from a fork with a `release` label or a `workflow_dispatch` with `deploy: true`, and every job turns green or grey with the reason next to it, down to the value of each sub-expression.
