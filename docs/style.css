@@ -91,3 +91,6 @@ pre.json { max-height: 320px; overflow: auto; font-size: 12px; background: var(-
 .foot { color: var(--muted); font-size: 13px; }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; }
 .toast.show { opacity: 1; }
+.upstream { margin: 6px 0 0; padding: 0 0 0 16px; font-size: 12.5px; }
+.upstream li { padding: 2px 0; }
+.upstream code { font-size: 12px; }

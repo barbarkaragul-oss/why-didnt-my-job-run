@@ -269,6 +269,17 @@ function renderJob(v: JobVerdict): HTMLElement {
     card.append(h('div', { class: 'needs' }, 'needs: ', ...job.needs.map((n) => h('span', { class: 'chip', text: `${n} → ${v.needsResults[n] ?? '?'}` }))));
     const upstream = Object.entries(v.ancestorResults).filter(([id, r]) => !job.needs.includes(id) && r !== 'success');
     if (upstream.length) card.append(h('div', { class: 'needs' }, 'further upstream: ', ...upstream.map(([id, r]) => h('span', { class: 'chip', text: `${id} → ${r}` })), h('span', { class: 'muted', text: 'status functions look at every ancestor' })));
+    // Why did those upstream jobs not succeed? Show each one's own condition and decisive values right here, so the
+    // reader does not have to scroll up to chase the chain.
+    const culprits = Object.entries(v.ancestorResults).filter(([, r]) => r !== 'success').map(([id]) => sim!.jobs.find((x) => x.job.id === id)).filter((x): x is JobVerdict => !!x);
+    if (culprits.length && (v.outcome === 'skipped' || v.outcome === 'runs' || v.outcome === 'fails')) {
+      const list = h('ul', { class: 'upstream' });
+      for (const c of culprits) {
+        const cond = c.job.ifSource ? `if: ${c.job.ifSource}` : 'no if:';
+        list.append(h('li', {}, h('code', { text: c.job.id }), h('span', { class: 'muted', text: ` ${cond} → ` }), h('span', { text: c.headline })));
+      }
+      card.append(h('details', { open: v.outcome === 'skipped' }, h('summary', { text: `why ${culprits.length === 1 ? 'that upstream job' : 'those upstream jobs'} did not succeed` }), list));
+    }
   }
   const ifLine = h('code', { class: 'expr' });
   if (job.ifSource) {
