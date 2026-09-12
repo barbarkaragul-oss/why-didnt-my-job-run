@@ -1,0 +1,851 @@
+{
+  "github_fields": [
+    {
+      "field": "github",
+      "type": "object",
+      "description": "The top-level context available during any job or step in a workflow. This object contains all the properties listed below.",
+      "quote": "The top-level context available during any job or step in a workflow. This object contains all the properties listed below.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.action",
+      "type": "string",
+      "description": "The name of the action currently running, or the id of a step. GitHub removes special characters, and uses the name `__run` when the current step runs a script without an `id`. If you use the same action more than once in the same job, the name will include a suffix with the sequence number with underscore before it. For example, the first script you run will have the name `__run`, and the second script will be named `__run_2`. Similarly, the second invocation of `actions/checkout` will be `actionscheckout2`.",
+      "quote": "The name of the action currently running, or the [`id`](/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsid) of a step. GitHub removes special characters, and uses the name `__run` when the current step runs a script without an `id`. If you use the same action more than once in the same job, the name will include a suffix with the sequence number with underscore before it. For example, the first script you run will have the name `__run`, and the second script will be named `__run_2`. Similarly, the second invocation of `actions/checkout` will be `actionscheckout2`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.action_path",
+      "type": "string",
+      "description": "The path where an action is located. This property is only supported in composite actions. You can use this path to access files located in the same repository as the action, for example by changing directories to the path (using the corresponding environment variable): `cd \"$GITHUB_ACTION_PATH\"` .",
+      "quote": "The path where an action is located. This property is only supported in composite actions. You can use this path to access files located in the same repository as the action, for example by changing directories to the path (using the corresponding environment variable): `cd \"$GITHUB_ACTION_PATH\"` . For more information on environment variables, see [Secure use reference](/en/actions/reference/security/secure-use#use-an-intermediate-environment-variable).",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.action_ref",
+      "type": "string",
+      "description": "For a step executing an action, this is the ref of the action being executed. For example, `v2`. Do not use in the `run` keyword. To make this context work with composite actions, reference it within the `env` context of the composite action.",
+      "quote": "For a step executing an action, this is the ref of the action being executed. For example, `v2`.<br><br>Do not use in the `run` keyword. To make this context work with composite actions, reference it within the `env` context of the composite action.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.action_repository",
+      "type": "string",
+      "description": "For a step executing an action, this is the owner and repository name of the action. For example, `actions/checkout`. Do not use in the `run` keyword. To make this context work with composite actions, reference it within the `env` context of the composite action.",
+      "quote": "For a step executing an action, this is the owner and repository name of the action. For example, `actions/checkout`.<br><br>Do not use in the `run` keyword. To make this context work with composite actions, reference it within the `env` context of the composite action.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.action_status",
+      "type": "string",
+      "description": "For a composite action, the current result of the composite action.",
+      "quote": "For a composite action, the current result of the composite action.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.actor",
+      "type": "string",
+      "description": "The username of the user that triggered the initial workflow run. If the workflow run is a re-run, this value may differ from `github.triggering_actor`. Any workflow re-runs will use the privileges of `github.actor`, even if the actor initiating the re-run (`github.triggering_actor`) has different privileges.",
+      "quote": "The username of the user that triggered the initial workflow run. If the workflow run is a re-run, this value may differ from `github.triggering_actor`. Any workflow re-runs will use the privileges of `github.actor`, even if the actor initiating the re-run (`github.triggering_actor`) has different privileges.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.actor_id",
+      "type": "string",
+      "description": "The account ID of the person or app that triggered the initial workflow run. For example, `1234567`. Note that this is different from the actor username.",
+      "quote": "The account ID of the person or app that triggered the initial workflow run. For example, `1234567`. Note that this is different from the actor username.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.api_url",
+      "type": "string",
+      "description": "The URL of the GitHub REST API.",
+      "quote": "The URL of the GitHub REST API.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.artifacts",
+      "type": "string",
+      "description": "Path on the runner to the file that identifies workflow artifacts for the current step. Write one declaration per line to identify files or OCI digest references as workflow artifacts.",
+      "quote": "Path on the runner to the file that identifies workflow artifacts for the current step. Write one declaration per line to identify files or OCI digest references as workflow artifacts. For more information, see [Workflow commands for GitHub Actions](/en/actions/reference/workflows-and-actions/workflow-commands#declaring-workflow-artifacts).",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.artifacts_list",
+      "type": "string",
+      "description": "Path on the runner to a read-only file containing the aggregated workflow artifact metadata for the current job as JSON.",
+      "quote": "Path on the runner to a read-only file containing the aggregated workflow artifact metadata for the current job as JSON. For more information, see [Workflow commands for GitHub Actions](/en/actions/reference/workflows-and-actions/workflow-commands#reading-workflow-artifacts).",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.base_ref",
+      "type": "string",
+      "description": "The `base_ref` or target branch of the pull request in a workflow run. This property is only available when the event that triggers a workflow run is either `pull_request` or `pull_request_target`.",
+      "quote": "The `base_ref` or target branch of the pull request in a workflow run. This property is only available when the event that triggers a workflow run is either `pull_request` or `pull_request_target`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.env",
+      "type": "string",
+      "description": "Path on the runner to the file that sets environment variables from workflow commands. This file is unique to the current step and is a different file for each step in a job.",
+      "quote": "Path on the runner to the file that sets environment variables from workflow commands. This file is unique to the current step and is a different file for each step in a job. For more information, see [Workflow commands for GitHub Actions](/en/actions/reference/workflows-and-actions/workflow-commands#setting-an-environment-variable).",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.event",
+      "type": "object",
+      "description": "The full event webhook payload. You can access individual properties of the event using this context. This object is identical to the webhook payload of the event that triggered the workflow run, and is different for each event. The webhooks for each GitHub Actions event is linked in Events that trigger workflows. For example, for a workflow run triggered by the `push` event, this object contains the contents of the push webhook payload.",
+      "quote": "The full event webhook payload. You can access individual properties of the event using this context. This object is identical to the webhook payload of the event that triggered the workflow run, and is different for each event. The webhooks for each GitHub Actions event is linked in [Events that trigger workflows](/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_call). For example, for a workflow run triggered by the [`push` event](/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#push), this object contains the contents of the [push webhook payload](/en/webhooks/webhook-events-and-payloads#push).",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.event_name",
+      "type": "string",
+      "description": "The name of the event that triggered the workflow run.",
+      "quote": "The name of the event that triggered the workflow run.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.event_path",
+      "type": "string",
+      "description": "The path to the file on the runner that contains the full event webhook payload.",
+      "quote": "The path to the file on the runner that contains the full event webhook payload.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.graphql_url",
+      "type": "string",
+      "description": "The URL of the GitHub GraphQL API.",
+      "quote": "The URL of the GitHub GraphQL API.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.head_ref",
+      "type": "string",
+      "description": "The `head_ref` or source branch of the pull request in a workflow run. This property is only available when the event that triggers a workflow run is either `pull_request` or `pull_request_target`.",
+      "quote": "The `head_ref` or source branch of the pull request in a workflow run. This property is only available when the event that triggers a workflow run is either `pull_request` or `pull_request_target`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.job",
+      "type": "string",
+      "description": "The job_id of the current job. Note: This context property is set by the Actions runner, and is only available within the execution `steps` of a job. Otherwise, the value of this property will be `null`.",
+      "quote": "The [`job_id`](/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_id) of the current job. <br /> Note: This context property is set by the Actions runner, and is only available within the execution `steps` of a job. Otherwise, the value of this property will be `null`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.path",
+      "type": "string",
+      "description": "Path on the runner to the file that sets system `PATH` variables from workflow commands. This file is unique to the current step and is a different file for each step in a job.",
+      "quote": "Path on the runner to the file that sets system `PATH` variables from workflow commands. This file is unique to the current step and is a different file for each step in a job. For more information, see [Workflow commands for GitHub Actions](/en/actions/reference/workflows-and-actions/workflow-commands#adding-a-system-path).",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.ref",
+      "type": "string",
+      "description": "The fully-formed ref of the branch or tag that triggered the workflow run. For workflows triggered by `push`, this is the branch or tag ref that was pushed. For workflows triggered by `pull_request` that were not merged, this is the pull request merge branch. If the pull request was merged, this is the branch it was merged into. For workflows triggered by `release`, this is the release tag created. For other triggers, this is the branch or tag ref that triggered the workflow run. This is only set if a branch or tag is available for the event type. The ref given is fully-formed, meaning that for branches the format is `refs/heads/<branch_name>`. For pull request events except `pull_request_target` that were not merged, it is `refs/pull/<pr_number>/merge`. `pull_request_target` events have the `ref` from the base branch. For tags it is `refs/tags/<tag_name>`. For example, `refs/heads/feature-branch-1`.",
+      "quote": "The fully-formed ref of the branch or tag that triggered the workflow run. For workflows triggered by `push`, this is the branch or tag ref that was pushed. For workflows triggered by `pull_request` that were not merged, this is the pull request merge branch. If the pull request was merged, this is the branch it was merged into. For workflows triggered by `release`, this is the release tag created. For other triggers, this is the branch or tag ref that triggered the workflow run. This is only set if a branch or tag is available for the event type. The ref given is fully-formed, meaning that for branches the format is `refs/heads/<branch_name>`. For pull request events except `pull_request_target` that were not merged, it is `refs/pull/<pr_number>/merge`. `pull_request_target` events have the `ref` from the base branch. For tags it is `refs/tags/<tag_name>`. For example, `refs/heads/feature-branch-1`. For more information about pull request merge branches, see [Pull requests](/en/pull-requests/reference/pull-requests#pull-request-refs-and-merge-branches).",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.ref_name",
+      "type": "string",
+      "description": "The short ref name of the branch or tag that triggered the workflow run. This value matches the branch or tag name shown on GitHub. For example, `feature-branch-1`. For pull requests that were not merged, the format is `<pr_number>/merge`.",
+      "quote": "The short ref name of the branch or tag that triggered the workflow run. This value matches the branch or tag name shown on GitHub. For example, `feature-branch-1`.<br><br>For pull requests that were not merged, the format is `<pr_number>/merge`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.ref_protected",
+      "type": "boolean",
+      "description": "`true` if branch protections or rulesets are configured for the ref that triggered the workflow run.",
+      "quote": "`true` if branch protections or [rulesets](/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/managing-rulesets-for-a-repository) are configured for the ref that triggered the workflow run.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.ref_type",
+      "type": "string",
+      "description": "The type of ref that triggered the workflow run. Valid values are `branch` or `tag`.",
+      "quote": "The type of ref that triggered the workflow run. Valid values are `branch` or `tag`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.repository",
+      "type": "string",
+      "description": "The owner and repository name. For example, `octocat/Hello-World`.",
+      "quote": "The owner and repository name. For example, `octocat/Hello-World`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.repository_id",
+      "type": "string",
+      "description": "The ID of the repository. For example, `123456789`. Note that this is different from the repository name.",
+      "quote": "The ID of the repository. For example, `123456789`. Note that this is different from the repository name.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.repository_owner",
+      "type": "string",
+      "description": "The repository owner's username. For example, `octocat`.",
+      "quote": "The repository owner's username. For example, `octocat`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.repository_owner_id",
+      "type": "string",
+      "description": "The repository owner's account ID. For example, `1234567`. Note that this is different from the owner's name.",
+      "quote": "The repository owner's account ID. For example, `1234567`. Note that this is different from the owner's name.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.repositoryUrl",
+      "type": "string",
+      "description": "The Git URL to the repository. For example, `git://github.com/octocat/hello-world.git`.",
+      "quote": "The Git URL to the repository. For example, `git://github.com/octocat/hello-world.git`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.retention_days",
+      "type": "string",
+      "description": "The number of days that workflow run logs and artifacts are kept.",
+      "quote": "The number of days that workflow run logs and artifacts are kept.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.run_id",
+      "type": "string",
+      "description": "A unique number for each workflow run within a repository. This number does not change if you re-run the workflow run.",
+      "quote": "A unique number for each workflow run within a repository. This number does not change if you re-run the workflow run.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.run_number",
+      "type": "string",
+      "description": "A unique number for each run of a particular workflow in a repository. This number begins at 1 for the workflow's first run, and increments with each new run. This number does not change if you re-run the workflow run.",
+      "quote": "A unique number for each run of a particular workflow in a repository. This number begins at 1 for the workflow's first run, and increments with each new run. This number does not change if you re-run the workflow run.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.run_attempt",
+      "type": "string",
+      "description": "A unique number for each attempt of a particular workflow run in a repository. This number begins at 1 for the workflow run's first attempt, and increments with each re-run.",
+      "quote": "A unique number for each attempt of a particular workflow run in a repository. This number begins at 1 for the workflow run's first attempt, and increments with each re-run.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.secret_source",
+      "type": "string",
+      "description": "The source of a secret used in a workflow. Possible values are `None`, `Actions`, `Codespaces`, or `Dependabot`.",
+      "quote": "The source of a secret used in a workflow. Possible values are `None`, `Actions`, `Codespaces`, or `Dependabot`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.server_url",
+      "type": "string",
+      "description": "The URL of the GitHub server. For example: `https://github.com`.",
+      "quote": "The URL of the GitHub server. For example: `https://github.com`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.sha",
+      "type": "string",
+      "description": "The commit SHA that triggered the workflow. The value of this commit SHA depends on the event that triggered the workflow. For more information, see Events that trigger workflows. For example, `ffac537e6cbbf934b08745a378932722df287a53`.",
+      "quote": "The commit SHA that triggered the workflow. The value of this commit SHA depends on the event that triggered the workflow. For more information, see [Events that trigger workflows](/en/actions/reference/workflows-and-actions/events-that-trigger-workflows). For example, `ffac537e6cbbf934b08745a378932722df287a53`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.token",
+      "type": "string",
+      "description": "A token to authenticate on behalf of the GitHub App installed on your repository. This is functionally equivalent to the `GITHUB_TOKEN` secret. Note: This context property is set by the Actions runner, and is only available within the execution `steps` of a job. Otherwise, the value of this property will be `null`.",
+      "quote": "A token to authenticate on behalf of the GitHub App installed on your repository. This is functionally equivalent to the `GITHUB_TOKEN` secret. For more information, see [Use GITHUB\\_TOKEN for authentication in workflows](/en/actions/tutorials/authenticate-with-github_token). <br /> Note: This context property is set by the Actions runner, and is only available within the execution `steps` of a job. Otherwise, the value of this property will be `null`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.triggering_actor",
+      "type": "string",
+      "description": "The username of the user that initiated the workflow run. If the workflow run is a re-run, this value may differ from `github.actor`. Any workflow re-runs will use the privileges of `github.actor`, even if the actor initiating the re-run (`github.triggering_actor`) has different privileges.",
+      "quote": "The username of the user that initiated the workflow run. If the workflow run is a re-run, this value may differ from `github.actor`. Any workflow re-runs will use the privileges of `github.actor`, even if the actor initiating the re-run (`github.triggering_actor`) has different privileges.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.workflow",
+      "type": "string",
+      "description": "The name of the workflow. If the workflow file doesn't specify a `name`, the value of this property is the full path of the workflow file in the repository.",
+      "quote": "The name of the workflow. If the workflow file doesn't specify a `name`, the value of this property is the full path of the workflow file in the repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.workflow_ref",
+      "type": "string",
+      "description": "The ref path to the workflow. For example, `octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch`.",
+      "quote": "The ref path to the workflow. For example, `octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.workflow_sha",
+      "type": "string",
+      "description": "The commit SHA for the workflow file.",
+      "quote": "The commit SHA for the workflow file.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    },
+    {
+      "field": "github.workspace",
+      "type": "string",
+      "description": "The default working directory on the runner for steps, and the default location of your repository when using the checkout action.",
+      "quote": "The default working directory on the runner for steps, and the default location of your repository when using the [`checkout`](https://github.com/actions/checkout) action.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+    }
+  ],
+  "per_event_derivation": [
+    {
+      "event": "push",
+      "ref": "{payload.ref} — the updated ref, fully-formed: refs/heads/{branch} for a branch push, refs/tags/{tag} for a tag push",
+      "sha": "Tip commit pushed to the ref ({payload.after}). When a branch is deleted, the SHA reverts to the default branch of the repository.",
+      "head_ref": "not set — docs: 'only available when the event that triggers a workflow run is either pull_request or pull_request_target'",
+      "base_ref": "not set — docs: 'only available when the event that triggers a workflow run is either pull_request or pull_request_target'",
+      "ref_name": "{branch} or {tag} (short name matching what GitHub shows)",
+      "ref_type": "branch or tag, according to the ref pushed (inferred from ref format; docs only state 'Valid values are branch or tag')",
+      "notes": "Runs for pushes to any branch, including workflows not merged into the default branch. Events not created if >5,000 branches pushed at once, or for tags when >3 tags pushed at once. Payload commit objects lack added/removed/modified attributes.",
+      "quote": "GITHUB_SHA: Tip commit pushed to the ref. When you delete a branch, the SHA in the workflow run (and its associated refs) reverts to the default branch of the repository. | GITHUB_REF: Updated ref. — and from the contexts page: For workflows triggered by `push`, this is the branch or tag ref that was pushed.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#push"
+    },
+    {
+      "event": "pull_request",
+      "ref": "refs/pull/{pr_number}/merge (PR merge branch) while the PR is open or closed-unmerged; if the PR was closed by merging, refs/heads/{base_branch} (the branch it was merged into)",
+      "sha": "Last merge commit on the GITHUB_REF (merge) branch — i.e. the SHA of the merge commit, not the head commit. Head commit is github.event.pull_request.head.sha.",
+      "head_ref": "{payload.pull_request.head.ref} — the source branch of the pull request (short name, e.g. feature-branch-1)",
+      "base_ref": "{payload.pull_request.base.ref} — the target branch of the pull request (short name, e.g. main)",
+      "ref_name": "{pr_number}/merge for pull requests that were not merged; for the merged-closed case the docs give no explicit ref_name (ref becomes the base branch)",
+      "ref_type": "branch (inferred; docs do not state ref_type per event)",
+      "notes": "Default activity types when `types` omitted: opened, synchronize, reopened. Workflows do not run if the PR has a merge conflict. The pull_request webhook payload is empty for merged PRs and PRs from forks. GITHUB_TOKEN-created PRs with opened/synchronize/reopened create runs that require approval.",
+      "quote": "GITHUB_SHA: Last merge commit on the `GITHUB_REF` branch | GITHUB_REF: PR merge branch `refs/pull/PULL_REQUEST_NUMBER/merge`. ... The value of `GITHUB_REF` varies for a closed pull request depending on whether the pull request has been merged or not. If a pull request was closed but not merged, it will be `refs/pull/PULL_REQUEST_NUMBER/merge`. If a pull request was closed as a result of being merged, it will be the fully qualified `ref` of the branch it was merged into, for example `/refs/heads/main`. ... Note that `GITHUB_SHA` for this event is the last merge commit of the pull request merge branch. If you want to get the commit ID for the last commit to the head branch of the pull request, use `github.event.pull_request.head.sha` instead.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request"
+    },
+    {
+      "event": "pull_request_target",
+      "ref": "refs/heads/{base_branch} — the contexts/variables pages say the ref is from the base branch; the events table row says 'Default branch' (see notes on the discrepancy)",
+      "sha": "Last commit on default branch (events table). The run executes 'in the context of the default branch of the base repository, rather than in the context of the merge commit'.",
+      "head_ref": "{payload.pull_request.head.ref} — the source branch of the pull request",
+      "base_ref": "{payload.pull_request.base.ref} — the target branch of the pull request",
+      "ref_name": "{base_branch} short name (derived from the base-branch ref; not stated explicitly per event)",
+      "ref_type": "branch (inferred; docs do not state ref_type per event)",
+      "notes": "Default activity types: opened, synchronize, reopened. Runs even if the PR has a merge conflict. Branch names that look like SHAs may not trigger this event. Security warning: do not check out or run PR head code.",
+      "quote": "GITHUB_SHA: Last commit on default branch | GITHUB_REF: Default branch. ... This event runs in the context of the default branch of the base repository, rather than in the context of the merge commit, as the `pull_request` event does. — and from the contexts page: `pull_request_target` events have the `ref` from the base branch.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_target"
+    },
+    {
+      "event": "release",
+      "ref": "refs/tags/{tag} — the tag ref of the release",
+      "sha": "Last commit in the tagged release",
+      "head_ref": "not set — only available for pull_request or pull_request_target",
+      "base_ref": "not set — only available for pull_request or pull_request_target",
+      "ref_name": "{tag}",
+      "ref_type": "tag (inferred from refs/tags/<tag_name>; docs do not state ref_type per event)",
+      "notes": "Activity types: published, unpublished, created, edited, deleted, prereleased, released; all trigger by default. Not triggered for created/edited/deleted on draft releases. `prereleased` does not fire for pre-releases published from drafts, but `published` does.",
+      "quote": "GITHUB_SHA: Last commit in the tagged release | GITHUB_REF: Tag ref of release `refs/tags/<tag_name>` — and from the contexts page: For workflows triggered by `release`, this is the release tag created.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#release"
+    },
+    {
+      "event": "workflow_dispatch",
+      "ref": "The branch or tag that received the dispatch ({payload.ref} chosen when dispatching): refs/heads/{branch} or refs/tags/{tag}",
+      "sha": "Last commit on the GITHUB_REF branch or tag",
+      "head_ref": "not set — only available for pull_request or pull_request_target",
+      "base_ref": "not set — only available for pull_request or pull_request_target",
+      "ref_name": "{branch} or {tag}",
+      "ref_type": "branch or tag according to the dispatched ref (inferred; docs do not state ref_type per event)",
+      "notes": "Only triggers if the workflow file exists on the default branch. Once run at least once, it can be dispatched against any branch or tag via API/CLI. Inputs are in `inputs` context (Booleans preserved) and `github.event.inputs` (strings). Max 25 top-level inputs, 65,535 chars.",
+      "quote": "GITHUB_SHA: Last commit on the `GITHUB_REF` branch or tag | GITHUB_REF: Branch or tag that received dispatch. ... On the GitHub UI, the \"Run workflow\" button will be present if the workflow file exists on the default branch. Once a workflow has run at least once, you can dispatch it against any branch or tag via the GitHub API or GitHub CLI.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_dispatch"
+    },
+    {
+      "event": "schedule",
+      "ref": "refs/heads/{default_branch}",
+      "sha": "Last commit on default branch",
+      "head_ref": "not set — only available for pull_request or pull_request_target",
+      "base_ref": "not set — only available for pull_request or pull_request_target",
+      "ref_name": "{default_branch}",
+      "ref_type": "branch (inferred; docs do not state ref_type per event)",
+      "notes": "No webhook payload. Only runs if the workflow file exists on the default branch; runs on latest commit of the default branch; may be delayed at high load; public repos auto-disable after 60 days of inactivity. Shortest interval 5 minutes; default UTC, optional IANA timezone.",
+      "quote": "GITHUB_SHA: Last commit on default branch | GITHUB_REF: Default branch. ... Scheduled workflows will only run on the default branch. — and from workflow-syntax: Scheduled workflows run on the latest commit on the default branch.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule"
+    },
+    {
+      "event": "issues",
+      "ref": "refs/heads/{default_branch}",
+      "sha": "Last commit on default branch",
+      "head_ref": "not set — only available for pull_request or pull_request_target",
+      "base_ref": "not set — only available for pull_request or pull_request_target",
+      "ref_name": "{default_branch}",
+      "ref_type": "branch (inferred; docs do not state ref_type per event)",
+      "notes": "Only triggers if the workflow file exists on the default branch. All activity types trigger by default (opened, edited, deleted, transferred, pinned, unpinned, closed, reopened, assigned, unassigned, labeled, unlabeled, locked, unlocked, milestoned, demilestoned, typed, untyped, field_added, field_removed).",
+      "quote": "GITHUB_SHA: Last commit on default branch | GITHUB_REF: Default branch. ... This event will only trigger a workflow run if the workflow file exists on the default branch.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issues"
+    },
+    {
+      "event": "issue_comment",
+      "ref": "refs/heads/{default_branch}",
+      "sha": "Last commit on default branch",
+      "head_ref": "not set — only available for pull_request or pull_request_target",
+      "base_ref": "not set — only available for pull_request or pull_request_target",
+      "ref_name": "{default_branch}",
+      "ref_type": "branch (inferred; docs do not state ref_type per event)",
+      "notes": "Fires for comments on both issues and pull requests; distinguish with `github.event.issue.pull_request` (truthy for PR comments). Only triggers if the workflow file exists on the default branch. Activity types: created, edited, deleted.",
+      "quote": "GITHUB_SHA: Last commit on default branch | GITHUB_REF: Default branch. ... The `issue_comment` event occurs for comments on both issues and pull requests. You can use the `github.event.issue.pull_request` property in a conditional to take different action depending on whether the triggering object was an issue or pull request.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment"
+    },
+    {
+      "event": "create",
+      "ref": "The branch or tag created: refs/heads/{branch} or refs/tags/{tag}",
+      "sha": "Last commit on the created branch or tag",
+      "head_ref": "not set — only available for pull_request or pull_request_target",
+      "base_ref": "not set — only available for pull_request or pull_request_target",
+      "ref_name": "{branch} or {tag}",
+      "ref_type": "branch or tag according to the created ref (inferred; docs do not state ref_type per event)",
+      "notes": "No activity types. An event will not be created when you create more than three tags at once.",
+      "quote": "GITHUB_SHA: Last commit on the created branch or tag | GITHUB_REF: Branch or tag created. ... An event will not be created when you create more than three tags at once.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#create"
+    },
+    {
+      "event": "delete",
+      "ref": "refs/heads/{default_branch}",
+      "sha": "Last commit on default branch",
+      "head_ref": "not set — only available for pull_request or pull_request_target",
+      "base_ref": "not set — only available for pull_request or pull_request_target",
+      "ref_name": "{default_branch}",
+      "ref_type": "branch (inferred; docs do not state ref_type per event)",
+      "notes": "No activity types. Only triggers if the workflow file exists on the default branch. Not created when more than three tags are deleted at once. The deleted ref itself is in the payload (github.event.ref / github.event.ref_type), not in github.ref.",
+      "quote": "GITHUB_SHA: Last commit on default branch | GITHUB_REF: Default branch. ... This event will only trigger a workflow run if the workflow file exists on the default branch. An event will not be created when you delete more than three tags at once.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#delete"
+    },
+    {
+      "event": "workflow_run",
+      "ref": "refs/heads/{default_branch}",
+      "sha": "Last commit on default branch",
+      "head_ref": "not set — only available for pull_request or pull_request_target",
+      "base_ref": "not set — only available for pull_request or pull_request_target",
+      "ref_name": "{default_branch}",
+      "ref_type": "branch (inferred; docs do not state ref_type per event)",
+      "notes": "Activity types: completed, requested, in_progress; `requested` does not occur on re-runs. Only triggers if the workflow file exists on the default branch. Cannot chain more than three levels. `branches`/`branches-ignore` filter the branch the TRIGGERING workflow ran on. Triggering workflow's conclusion is in github.event.workflow_run.conclusion. Runs regardless of the triggering workflow's conclusion. If multiple `workflows` are listed, only one needs to run.",
+      "quote": "GITHUB_SHA: Last commit on default branch | GITHUB_REF: Default branch. ... You can't use `workflow_run` to chain together more than three levels of workflows. ... A workflow run is triggered regardless of the conclusion of the previous workflow. If you want to run a job or step based on the result of the triggering workflow, you can use a conditional with the `github.event.workflow_run.conclusion` property.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run"
+    },
+    {
+      "event": "merge_group",
+      "ref": "Ref of the merge group — a temporary branch created by the merge queue whose name begins with the prefix gh-readonly-queue/{base_branch}; the full pattern after the prefix is not documented on GitHub Docs",
+      "sha": "SHA of the merge group (a temporary-branch commit containing base branch + PR + PRs ahead in the queue; 'contain a different sha from the pull request')",
+      "head_ref": "not set — only available for pull_request or pull_request_target",
+      "base_ref": "not set — only available for pull_request or pull_request_target",
+      "ref_name": "gh-readonly-queue/{base_branch}/... (short form of the merge group branch; not documented explicitly)",
+      "ref_type": "branch (the merge-queue docs call them 'temporary branches'; ref_type not stated per event)",
+      "notes": "Only activity type: checks_requested. Required checks must include merge_group as a trigger or the merge fails. The merge_group event is separate from pull_request and push. Payload is github.event.merge_group (head_sha, head_ref, base_ref, base_sha).",
+      "quote": "GITHUB_SHA: SHA of the merge group | GITHUB_REF: Ref of the merge group. — and from the merge-queue page: With third-party CI providers, you will need to update your CI configuration to run when a branch that begins with the special prefix `gh-readonly-queue/{base_branch}` is pushed to. These are the temporary branches that are created on your behalf by a merge queue and contain a different `sha` from the pull request.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#merge_group"
+    },
+    {
+      "event": "repository_dispatch",
+      "ref": "refs/heads/{default_branch}",
+      "sha": "Last commit on default branch",
+      "head_ref": "not set — only available for pull_request or pull_request_target",
+      "base_ref": "not set — only available for pull_request or pull_request_target",
+      "ref_name": "{default_branch}",
+      "ref_type": "branch (inferred; docs do not state ref_type per event)",
+      "notes": "Activity type is the custom `event_type` string sent in the API request (max 100 chars); `types` filters on it; all event_types trigger by default. Only triggers if the workflow file exists on the default branch. `client_payload` is available as github.event.client_payload (max 10 top-level properties, 65,535 chars).",
+      "quote": "GITHUB_SHA: Last commit on default branch | GITHUB_REF: Default branch. ... When you make a request to create a `repository_dispatch` event, you must specify an `event_type` to describe the activity type. By default, all `repository_dispatch` activity types trigger a workflow to run. You can use the `types` keyword to limit your workflow to run when a specific `event_type` value is sent in the `repository_dispatch` webhook payload.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#repository_dispatch"
+    },
+    {
+      "event": "pull_request_review",
+      "ref": "refs/pull/{pr_number}/merge (PR merge branch)",
+      "sha": "Last merge commit on the GITHUB_REF (merge) branch",
+      "head_ref": "not documented as set — contexts page says head_ref is only available for pull_request or pull_request_target (PR branches are in github.event.pull_request.head.ref)",
+      "base_ref": "not documented as set — contexts page says base_ref is only available for pull_request or pull_request_target (github.event.pull_request.base.ref)",
+      "ref_name": "{pr_number}/merge",
+      "ref_type": "branch (inferred; docs do not state ref_type per event)",
+      "notes": "Activity types: submitted, edited, dismissed; all trigger by default. Check approval with github.event.review.state == 'approved'. Fork PRs send this event to the base repository only; secrets other than GITHUB_TOKEN are not passed for fork-triggered runs.",
+      "quote": "GITHUB_SHA: Last merge commit on the `GITHUB_REF` branch | GITHUB_REF: PR merge branch `refs/pull/PULL_REQUEST_NUMBER/merge`. ... To run your workflow when a pull request has been approved, you can trigger your workflow with the `submitted` type of `pull_request_review` event, then check the review state with the `github.event.review.state` property.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_review"
+    },
+    {
+      "event": "discussion",
+      "ref": "refs/heads/{default_branch}",
+      "sha": "Last commit on default branch",
+      "head_ref": "not set — only available for pull_request or pull_request_target",
+      "base_ref": "not set — only available for pull_request or pull_request_target",
+      "ref_name": "{default_branch}",
+      "ref_type": "branch (inferred; docs do not state ref_type per event)",
+      "notes": "Only triggers if the workflow file exists on the default branch. All activity types trigger by default (created, edited, deleted, transferred, pinned, unpinned, labeled, unlabeled, locked, unlocked, category_changed, answered, unanswered). Discussions webhooks are in public preview.",
+      "quote": "GITHUB_SHA: Last commit on default branch | GITHUB_REF: Default branch. ... This event will only trigger a workflow run if the workflow file exists on the default branch. Webhook events for GitHub Discussions are currently in public preview and subject to change.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#discussion"
+    },
+    {
+      "event": "label",
+      "ref": "refs/heads/{default_branch}",
+      "sha": "Last commit on default branch",
+      "head_ref": "not set — only available for pull_request or pull_request_target",
+      "base_ref": "not set — only available for pull_request or pull_request_target",
+      "ref_name": "{default_branch}",
+      "ref_type": "branch (inferred; docs do not state ref_type per event)",
+      "notes": "Fires when a label itself is created/edited/deleted, not when a label is applied to an issue/PR (use issues/pull_request `labeled`). Only triggers if the workflow file exists on the default branch.",
+      "quote": "GITHUB_SHA: Last commit on default branch | GITHUB_REF: Default branch. ... If you want to run your workflow when a label is added to or removed from an issue, pull request, or discussion, use the `labeled` or `unlabeled` activity types for the `issues`, `pull_request`, `pull_request_target`, or `discussion` events instead.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#label"
+    }
+  ],
+  "job_status_functions": [
+    {
+      "name": "success()",
+      "rule": "Returns true when all previous steps (and, for jobs, all needed jobs) have succeeded.",
+      "quote": "Returns `true` when all previous steps have succeeded.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#success"
+    },
+    {
+      "name": "always()",
+      "rule": "Always evaluates to true, even when the run is cancelled; the docs recommend `!cancelled()` instead for run-regardless-of-result semantics.",
+      "quote": "Causes the step to always execute, and returns `true`, even when canceled. The `always` expression is best used at the step level or on tasks that you expect to run even when a job is canceled. ... Avoid using `always` for any task that could suffer from a critical failure, for example: getting sources, otherwise the workflow may hang until it times out. If you want to run a job or step regardless of its success or failure, use the recommended alternative: `if: ${{ !cancelled() }}`",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#always"
+    },
+    {
+      "name": "cancelled()",
+      "rule": "Returns true if the workflow was cancelled.",
+      "quote": "Returns `true` if the workflow was canceled.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#cancelled"
+    },
+    {
+      "name": "failure()",
+      "rule": "Returns true when any previous step of the job failed; for jobs with `needs`, returns true if ANY ancestor job in the dependency chain failed.",
+      "quote": "Returns `true` when any previous step of a job fails. If you have a chain of dependent jobs, `failure()` returns `true` if any ancestor job fails.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#failure"
+    },
+    {
+      "name": "default condition (implicit success())",
+      "rule": "When an `if` contains no status-check function, GitHub ANDs in an implicit success(); a job or step with no `if` at all therefore runs only if everything before it succeeded. To run on failure you must include failure() (or always()/!cancelled()) explicitly, even when adding other conditions.",
+      "quote": "You can use the following status check functions as expressions in `if` conditionals. A default status check of `success()` is applied unless you include one of these functions. ... You can include extra conditions for a step to run after a failure, but you must still include `failure()` to override the default status check of `success()` that is automatically applied to `if` conditions that don't contain a status check function.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#status-check-functions"
+    },
+    {
+      "name": "needs propagation of failure/skip",
+      "rule": "If any needed job fails or is skipped, the dependent job is skipped (unless its `if` uses a status function such as always() that lets it continue); the skip/failure propagates transitively down the whole dependency chain.",
+      "quote": "Use `jobs.<job_id>.needs` to identify any jobs that must complete successfully before this job will run. It can be a string or array of strings. If a job fails or is skipped, all jobs that need it are skipped unless the jobs use a conditional expression that causes the job to continue. If a run contains a series of jobs that need each other, a failure or skip applies to all jobs in the dependency chain from the point of failure or skip onwards. If you would like a job to run even if a job it is dependent on did not succeed, use the `always()` conditional expression in `jobs.<job_id>.if`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idneeds"
+    },
+    {
+      "name": "needs.<job_id>.result",
+      "rule": "The result of a direct dependency job; one of success, failure, cancelled, skipped. Only direct dependencies appear in the needs context, not transitive ones.",
+      "quote": "`needs.<job_id>.result` | `string` | The result of a job that the current job depends on. Possible values are `success`, `failure`, `cancelled`, or `skipped`. — The `needs` context contains outputs from all jobs that are defined as a direct dependency of the current job. Note that this doesn't include implicitly dependent jobs (for example, dependent jobs of a dependent job).",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#needs-context"
+    },
+    {
+      "name": "needs.<job_id>.outputs",
+      "rule": "Outputs of a direct dependency job; for matrix jobs, outputs from all matrix jobs are combined into one map (last writer wins for duplicate names, order not guaranteed).",
+      "quote": "`needs.<job_id>.outputs.<output name>` | `string` | The value of a specific output for a job that the current job depends on. — Matrices can be used to generate multiple outputs of different names. When using a matrix, job outputs will be combined from all jobs inside the matrix. ... Actions does not guarantee the order that matrix jobs will run in. Ensure that the output name is unique, otherwise the last matrix job that runs will override the output value.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idoutputs"
+    },
+    {
+      "name": "skipped job reports Success",
+      "rule": "A job skipped by its `if` condition shows 'This check was skipped.' and reports status Success; it does not block PR merge even as a required check.",
+      "quote": "Skipped jobs display the message \"This check was skipped.\" ... A job that is skipped will report its status as \"Success\". It will not prevent a pull request from merging, even if it is a required check.",
+      "url": "https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-jobs-with-conditions"
+    },
+    {
+      "name": "jobs.<job_id>.if evaluation order",
+      "rule": "The job-level `if` is evaluated once, before the matrix is expanded, so `matrix.*` is not available in jobs.<job_id>.if (consistent with the availability table: github, needs, vars, inputs only).",
+      "quote": "You can use the `jobs.<job_id>.if` conditional to prevent a job from running unless a condition is met. ... The `jobs.<job_id>.if` condition is evaluated before [`jobs.<job_id>.strategy.matrix`](/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymatrix) is applied.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idif"
+    },
+    {
+      "name": "if syntax: optional ${{ }} and leading !",
+      "rule": "In `if`, the `${{ }}` wrapper may be omitted because the value is always evaluated as an expression; but an expression starting with `!` must be wrapped in `${{ }}` or quoted/parenthesised because `!` is reserved in YAML.",
+      "quote": "When you use expressions in an `if` conditional, you can, optionally, omit the `${{ }}` expression syntax because GitHub Actions automatically evaluates the `if` conditional as an expression. However, this exception does not apply everywhere. You must always use the `${{ }}` expression syntax or escape with `''`, `\"\"`, or `()` when the expression starts with `!`, since `!` is reserved notation in YAML format.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idif"
+    },
+    {
+      "name": "where status functions may be used",
+      "rule": "Per the context-availability table, always/cancelled/success/failure are permitted only in jobs.<job_id>.if and jobs.<job_id>.steps.if; every other key lists 'None' for special functions.",
+      "quote": "`jobs.<job_id>.if` | `github, needs, vars, inputs` | `always, cancelled, success, failure` ... `jobs.<job_id>.steps.if` | `github, needs, strategy, matrix, job, runner, env, vars, steps, inputs` | `always, cancelled, success, failure, hashFiles`",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability"
+    },
+    {
+      "name": "job.status",
+      "rule": "Outside `if`, the running job's current status is job.status: success, failure or cancelled (no 'skipped').",
+      "quote": "Outside `if` conditionals, you can use `job.status` to access the job status. — `job.status` | `string` | The current status of the job. Possible values are `success`, `failure`, or `cancelled`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#job-context"
+    },
+    {
+      "name": "steps.<step_id>.conclusion vs outcome",
+      "rule": "outcome is the step result before continue-on-error is applied; conclusion is after. A continue-on-error step that fails has outcome=failure but conclusion=success. Values: success, failure, cancelled, skipped.",
+      "quote": "`steps.<step_id>.conclusion` | `string` | The result of a completed step after `continue-on-error` is applied. Possible values are `success`, `failure`, `cancelled`, or `skipped`. When a `continue-on-error` step fails, the `outcome` is `failure`, but the final `conclusion` is `success`. — `steps.<step_id>.outcome` | `string` | The result of a completed step before `continue-on-error` is applied.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#steps-context"
+    },
+    {
+      "name": "jobs.<job_id>.continue-on-error",
+      "rule": "A job with continue-on-error: true that fails does not fail the workflow run; within a matrix it does not cancel sibling jobs.",
+      "quote": "`jobs.<job_id>.continue-on-error` applies to a single job. If `jobs.<job_id>.continue-on-error` is `true`, other jobs in the matrix will continue running even if the job with `jobs.<job_id>.continue-on-error: true` fails. Prevents a workflow run from failing when a job fails. Set to `true` to allow a workflow run to pass when this job fails.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idcontinue-on-error"
+    },
+    {
+      "name": "jobs.<job_id>.steps[*].continue-on-error",
+      "rule": "A step with continue-on-error: true that fails does not fail the job.",
+      "quote": "Prevents a job from failing when a step fails. Set to `true` to allow a job to pass when this step fails.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepscontinue-on-error"
+    },
+    {
+      "name": "needs with always() example",
+      "rule": "Documented pattern: `if: ${{ always() }}` on a job with `needs` makes it run after its dependencies complete regardless of their result.",
+      "quote": "In this example, `job3` uses the `always()` conditional expression so that it always runs after `job1` and `job2` have completed, regardless of whether they were successful.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idneeds"
+    }
+  ],
+  "expression_semantics": [
+    {
+      "rule": "Equality is loose: when operand types differ both sides are coerced to numbers using a fixed table (null→0, true→1, false→0, string→parsed JSON number else NaN, empty string→0, array→NaN, object→NaN).",
+      "quote": "GitHub performs loose equality comparisons. If the types do not match, GitHub coerces the type to a number. GitHub casts data types to a number using these conversions: Null → `0`; Boolean → `true` returns `1`, `false` returns `0`; String → Parsed from any legal JSON number format, otherwise `NaN`. Note: empty string returns `0`.; Array → `NaN`; Object → `NaN`",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#operators"
+    },
+    {
+      "rule": "NaN in any relational comparison (<, <=, >, >=) makes the result false.",
+      "quote": "When `NaN` is one of the operands of any relational comparison (`>`, `<`, `>=`, `<=`), the result is always `false`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#operators"
+    },
+    {
+      "rule": "String comparison is case-insensitive.",
+      "quote": "GitHub ignores case when comparing strings.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#operators"
+    },
+    {
+      "rule": "Objects and arrays are equal only by reference (same instance).",
+      "quote": "Objects and arrays are only considered equal when they are the same instance.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#operators"
+    },
+    {
+      "rule": "Truthiness in conditionals: false, 0, -0, empty string and null are falsy; everything else is truthy.",
+      "quote": "Note that in conditionals, falsy values (`false`, `0`, `-0`, `\"\"`, `''`, `null`) are coerced to `false` and truthy (`true` and other non-falsy values) are coerced to `true`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#literals"
+    },
+    {
+      "rule": "Literal types are boolean, null, number (any JSON number format), string; strings inside ${{ }} must use single quotes, escaped by doubling; double quotes are an error.",
+      "quote": "As part of an expression, you can use `boolean`, `null`, `number`, or `string` data types. ... You don't need to enclose strings in `${{` and `}}`. However, if you do, you must use single quotes (`'`) around the string. To use a literal single quote, escape the literal single quote using an additional single quote (`''`). Wrapping with double quotes (`\"`) will throw an error.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#literals"
+    },
+    {
+      "rule": "Dereferencing a property that does not exist yields an empty string (not an error, not null). Property names for dot syntax must start with a letter or _ and contain only alphanumerics, - or _; otherwise use index syntax.",
+      "quote": "In order to use property dereference syntax, the property name must start with a letter or `_` and contain only alphanumeric characters, `-`, or `_`. If you attempt to dereference a nonexistent property, it will evaluate to an empty string.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#available-contexts"
+    },
+    {
+      "rule": "Functions that compare cast their arguments to strings with a fixed table: null→'', boolean→'true'/'false', number→decimal (exponential for large), arrays and objects are not converted.",
+      "quote": "Some functions cast values to a string to perform comparisons. GitHub casts data types to a string using these conversions: Null → `''`; Boolean → `'true'` or `'false'`; Number → Decimal format, exponential for large numbers; Array → Arrays are not converted to a string; Object → Objects are not converted to a string",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#functions"
+    },
+    {
+      "rule": "contains(search, item): array search → element membership; string search → substring; case-insensitive; casts to string.",
+      "quote": "`contains( search, item )` Returns `true` if `search` contains `item`. If `search` is an array, this function returns `true` if the `item` is an element in the array. If `search` is a string, this function returns `true` if the `item` is a substring of `search`. This function is not case sensitive. Casts values to a string.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#contains"
+    },
+    {
+      "rule": "contains() with an object filter tests array membership (e.g. labels); contains(fromJSON('[...]'), x) is the documented idiom for 'x in list'.",
+      "quote": "`contains(github.event.issue.labels.*.name, 'bug')` returns `true` if the issue related to the event has a label \"bug\". ... `contains(fromJSON('[\"push\", \"pull_request\"]'), github.event_name)` returns `true` if `github.event_name` is \"push\" or \"pull_request\".",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#contains"
+    },
+    {
+      "rule": "startsWith / endsWith are case-insensitive and cast to string.",
+      "quote": "`startsWith( searchString, searchValue )` Returns `true` when `searchString` starts with `searchValue`. This function is not case sensitive. Casts values to a string. ... `endsWith( searchString, searchValue )` Returns `true` if `searchString` ends with `searchValue`. This function is not case sensitive. Casts values to a string.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#startswith"
+    },
+    {
+      "rule": "format(string, v0, v1, ...): {N} placeholders, at least one replacement required, no maximum; literal braces are escaped by doubling.",
+      "quote": "`format( string, replaceValue0, replaceValue1, ..., replaceValueN)` Replaces values in the `string`, with the variable `replaceValueN`. Variables in the `string` are specified using the `{N}` syntax, where `N` is an integer. You must specify at least one `replaceValue` and `string`. There is no maximum for the number of variables (`replaceValueN`) you can use. Escape curly braces using double braces. ... `format('{{Hello {0} {1} {2}!}}', 'Mona', 'the', 'Octocat')` Returns '{Hello Mona the Octocat!}'.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#format"
+    },
+    {
+      "rule": "join(array, sep?) concatenates with ',' by default; casts to string; accepts a string as the array.",
+      "quote": "`join( array, optionalSeparator )` The value for `array` can be an array or a string. All values in `array` are concatenated into a string. If you provide `optionalSeparator`, it is inserted between the concatenated values. Otherwise, the default separator `,` is used. Casts values to a string.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#join"
+    },
+    {
+      "rule": "toJSON pretty-prints; fromJSON parses a JSON string into an object/array/number/boolean/null and is the documented way to do numeric comparison or build a matrix from a string output.",
+      "quote": "`toJSON(value)` Returns a pretty-print JSON representation of `value`. ... `fromJSON(value)` Returns a JSON object or JSON data type for `value`. You can use this function to provide a JSON object as an evaluated expression or to convert any data type that can be represented in JSON or JavaScript, such as strings, booleans, null values, arrays, and objects. — For numerical comparison, the `fromJSON()` function can be used to convert a string to a number.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#fromjson"
+    },
+    {
+      "rule": "steps.<id>.outputs.<name> is always a string in expressions.",
+      "quote": "`steps.<step_id>.outputs.<output_name>` evaluates as a string. You need to use specific syntax to tell GitHub to evaluate an expression rather than treat it as a string.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#operators"
+    },
+    {
+      "rule": "hashFiles(path, ...): SHA-256 over files matched by comma-separated glob patterns relative to GITHUB_WORKSPACE (only files inside it); returns '' when nothing matches; glob matching is case-insensitive on Windows. It needs the runner's workspace, so it is a 'special function' limited to step-level keys.",
+      "quote": "`hashFiles(path)` Returns a single hash for the set of files that matches the `path` pattern. You can provide a single `path` pattern or multiple `path` patterns separated by commas. The `path` is relative to the `GITHUB_WORKSPACE` directory and can only include files inside of the `GITHUB_WORKSPACE`. This function calculates an individual SHA-256 hash for each matched file, and then uses those hashes to calculate a final SHA-256 hash for the set of files. If the `path` pattern does not match any files, this returns an empty string. ... Pattern matching for `hashFiles` follows glob pattern matching and is case-insensitive on Windows.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#hashfiles"
+    },
+    {
+      "rule": "hashFiles availability: allowed only in jobs.<job_id>.steps.{continue-on-error, env, if, name, run, timeout-minutes, with, working-directory}. It is NOT listed for jobs.<job_id>.if, runs-on, strategy, env, concurrency or any job-level key, so a job-level use is invalid.",
+      "quote": "In addition, some functions may only be used in certain places. For example, the `hashFiles` function is not available everywhere. ... `jobs.<job_id>.steps.continue-on-error` | ... | `hashFiles`; `jobs.<job_id>.steps.env` | ... | `hashFiles`; `jobs.<job_id>.steps.if` | ... | `always, cancelled, success, failure, hashFiles`; `jobs.<job_id>.steps.name` | ... | `hashFiles`; `jobs.<job_id>.steps.run` | ... | `hashFiles`; `jobs.<job_id>.steps.timeout-minutes` | ... | `hashFiles`; `jobs.<job_id>.steps.with` | ... | `hashFiles`; `jobs.<job_id>.steps.working-directory` | ... | `hashFiles`",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability"
+    },
+    {
+      "rule": "case(pred1, val1, ..., default): evaluates predicates in order, returns the value of the first true predicate, else the trailing default.",
+      "quote": "`case( pred1, val1, pred2, val2, ..., default )` Evaluates predicates in order and returns the value corresponding to the first predicate that evaluates to `true`. If no predicate matches, it returns the last argument as the default value.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#case"
+    },
+    {
+      "rule": "Object filter `.*` maps over an array (collecting a property from each element) or over an object's values; output order for objects is not guaranteed.",
+      "quote": "You can use the `*` syntax to apply a filter and select matching items in a collection. ... The filter `fruits.*.name` returns the array `[ \"apple\", \"orange\", \"pear\" ]`. You may also use the `*` syntax on an object. ... The filter `vegetables.*.ediblePortions` could evaluate to: [[\"roots\", \"stalks\"], [\"hearts\", \"stems\", \"leaves\"], [\"roots\", \"stems\", \"leaves\"]] Since objects don't preserve order, the order of the output cannot be guaranteed.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#object-filters"
+    },
+    {
+      "rule": "Operators available: ( ) grouping, [ ] index, . dereference, ! not, < <= > >=, == !=, &&, ||.",
+      "quote": "`( )` Logical grouping; `[ ]` Index; `.` Property de-reference; `!` Not; `<` Less than; `<=` Less than or equal; `>` Greater than; `>=` Greater than or equal; `==` Equal; `!=` Not equal; `&&` And; `||` Or",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#operators"
+    },
+    {
+      "rule": "CONTEXT AVAILABILITY TABLE (complete, verbatim): each workflow key may only use the listed contexts and special functions; anything not listed is unavailable there.",
+      "quote": "| Workflow key | Context | Special functions |\n| `run-name` | `github, inputs, vars` | None |\n| `concurrency` | `github, inputs, vars` | None |\n| `env` | `github, secrets, inputs, vars` | None |\n| `jobs.<job_id>.concurrency` | `github, needs, strategy, matrix, inputs, vars` | None |\n| `jobs.<job_id>.container` | `github, needs, strategy, matrix, vars, inputs` | None |\n| `jobs.<job_id>.container.credentials` | `github, needs, strategy, matrix, env, vars, secrets, inputs` | None |\n| `jobs.<job_id>.container.env.<env_id>` | `github, needs, strategy, matrix, job, runner, env, vars, secrets, inputs` | None |\n| `jobs.<job_id>.container.image` | `github, needs, strategy, matrix, vars, inputs` | None |\n| `jobs.<job_id>.continue-on-error` | `github, needs, strategy, vars, matrix, inputs` | None |\n| `jobs.<job_id>.defaults.run` | `github, needs, strategy, matrix, env, vars, inputs` | None |\n| `jobs.<job_id>.env` | `github, needs, strategy, matrix, vars, secrets, inputs` | None |\n| `jobs.<job_id>.environment` | `github, needs, strategy, matrix, vars, inputs` | None |\n| `jobs.<job_id>.environment.url` | `github, needs, strategy, matrix, job, runner, env, vars, steps, inputs` | None |\n| `jobs.<job_id>.if` | `github, needs, vars, inputs` | `always, cancelled, success, failure` |\n| `jobs.<job_id>.name` | `github, needs, strategy, matrix, vars, inputs` | None |\n| `jobs.<job_id>.outputs.<output_id>` | `github, needs, strategy, matrix, job, runner, env, vars, secrets, steps, inputs` | None |\n| `jobs.<job_id>.runs-on` | `github, needs, strategy, matrix, vars, inputs` | None |\n| `jobs.<job_id>.secrets.<secrets_id>` | `github, needs, strategy, matrix, secrets, inputs, vars` | None |\n| `jobs.<job_id>.services` | `github, needs, strategy, matrix, vars, inputs` | None |\n| `jobs.<job_id>.services.<service_id>.credentials` | `github, needs, strategy, matrix, env, vars, secrets, inputs` | None |\n| `jobs.<job_id>.services.<service_id>.env.<env_id>` | `github, needs, strategy, matrix, job, runner, env, vars, secrets, inputs` | None |\n| `jobs.<job_id>.steps.continue-on-error` | `github, needs, strategy, matrix, job, runner, env, vars, secrets, steps, inputs` | `hashFiles` |\n| `jobs.<job_id>.steps.env` | `github, needs, strategy, matrix, job, runner, env, vars, secrets, steps, inputs` | `hashFiles` |\n| `jobs.<job_id>.steps.if` | `github, needs, strategy, matrix, job, runner, env, vars, steps, inputs` | `always, cancelled, success, failure, hashFiles` |\n| `jobs.<job_id>.steps.name` | `github, needs, strategy, matrix, job, runner, env, vars, secrets, steps, inputs` | `hashFiles` |\n| `jobs.<job_id>.steps.run` | `github, needs, strategy, matrix, job, runner, env, vars, secrets, steps, inputs` | `hashFiles` |\n| `jobs.<job_id>.steps.timeout-minutes` | `github, needs, strategy, matrix, job, runner, env, vars, secrets, steps, inputs` | `hashFiles` |\n| `jobs.<job_id>.steps.with` | `github, needs, strategy, matrix, job, runner, env, vars, secrets, steps, inputs` | `hashFiles` |\n| `jobs.<job_id>.steps.working-directory` | `github, needs, strategy, matrix, job, runner, env, vars, secrets, steps, inputs` | `hashFiles` |\n| `jobs.<job_id>.strategy` | `github, needs, vars, inputs` | None |\n| `jobs.<job_id>.timeout-minutes` | `github, needs, strategy, matrix, vars, inputs` | None |\n| `jobs.<job_id>.with.<with_id>` | `github, needs, strategy, matrix, inputs, vars` | None |\n| `on.workflow_call.inputs.<inputs_id>.default` | `github, inputs, vars` | None |\n| `on.workflow_call.outputs.<output_id>.value` | `github, jobs, vars, inputs` | None |",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability"
+    },
+    {
+      "rule": "Availability table preamble: contexts listed are the ONLY ones allowed for that key; functions are unrestricted unless listed.",
+      "quote": "The following table lists the restrictions on where each context and special function can be used within a workflow. The listed contexts are only available for the given workflow key, and may not be used anywhere else. Unless listed below, a function can be used anywhere.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability"
+    },
+    {
+      "rule": "job.if may use github, needs, vars, inputs (no matrix, strategy, env, secrets, steps, runner, job) plus always/cancelled/success/failure — no hashFiles.",
+      "quote": "`jobs.<job_id>.if` | `github, needs, vars, inputs` | `always, cancelled, success, failure`",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability"
+    },
+    {
+      "rule": "step.if may use github, needs, strategy, matrix, job, runner, env, vars, steps, inputs (no secrets) plus the four status functions and hashFiles.",
+      "quote": "`jobs.<job_id>.steps.if` | `github, needs, strategy, matrix, job, runner, env, vars, steps, inputs` | `always, cancelled, success, failure, hashFiles`",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability"
+    },
+    {
+      "rule": "strategy (and therefore strategy.matrix) may use github, needs, vars, inputs only; runs-on may use github, needs, strategy, matrix, vars, inputs.",
+      "quote": "`jobs.<job_id>.strategy` | `github, needs, vars, inputs` | None ... `jobs.<job_id>.runs-on` | `github, needs, strategy, matrix, vars, inputs` | None",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability"
+    },
+    {
+      "rule": "Secrets cannot be referenced directly in `if:`; an unset secret evaluates to an empty string (documented workaround: copy to job env and compare env.X != '').",
+      "quote": "Secrets cannot be directly referenced in `if:` conditionals. Instead, consider setting secrets as job-level environment variables, then referencing the environment variables to conditionally run steps in the job. If a secret has not been set, the return value of an expression referencing the secret (such as `${{ secrets.SuperSecret }}` in the example) will be an empty string.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsif"
+    },
+    {
+      "rule": "Contexts (unlike default env vars) are evaluated by GitHub before the job is routed to a runner, which is why job.if can gate whether a job runs at all; job-only contexts (runner, job.*, github.job, github.token) are null/unavailable before that.",
+      "quote": "You can use most contexts at any point in your workflow, including when *default variables* would be unavailable. For example, you can use contexts with expressions to perform initial processing before the job is routed to a runner for execution; this allows you to use a context with the conditional `if` keyword to determine whether a step should run. ... The `if` check is processed by GitHub Actions, and the job is only sent to the runner if the result is `true`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#determining-when-to-use-contexts"
+    },
+    {
+      "rule": "Default environment variables (GITHUB_REF etc.) are not readable through the env context; use the corresponding github.* property instead.",
+      "quote": "Because default environment variables are set by GitHub and not defined in a workflow, they are not accessible through the `env` context. However, most of the default variables have a corresponding, and similarly named, context property. For example, the value of the `GITHUB_REF` variable can be read during workflow processing using the `${{ github.ref }}` context property.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/variables"
+    },
+    {
+      "rule": "inputs vs github.event.inputs for workflow_dispatch: same data, but `inputs` keeps booleans as booleans while github.event.inputs stringifies them; choice resolves to a string.",
+      "quote": "The workflow will also receive the inputs in the `github.event.inputs` context. The information in the `inputs` context and `github.event.inputs` context is identical except that the `inputs` context preserves Boolean values as Booleans instead of converting them to strings. The `choice` type resolves to a string and is a single selectable option.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatchinputs"
+    }
+  ],
+  "matrix_rules": [
+    {
+      "rule": "A matrix creates one job per combination of every variable's values (cartesian product); max 256 jobs per workflow run; variables become matrix.<name>.",
+      "quote": "Use `jobs.<job_id>.strategy.matrix` to define a matrix of different job configurations. ... A matrix will generate a maximum of 256 jobs per workflow run. This limit applies to both GitHub-hosted and self-hosted runners. The variables that you define become properties in the `matrix` context ... Specify multiple variables to create a multi-dimensional matrix. A job will run for each possible combination of the variables.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymatrix"
+    },
+    {
+      "rule": "Job creation order: variables are iterated in the order defined, first variable outermost.",
+      "quote": "The order of the variables in the matrix determines the order in which the jobs are created. The first variable you define will be the first job that is created in your workflow run. — The above matrix will create the jobs in the following order. `{version: 10, os: ubuntu-latest}` `{version: 10, os: windows-latest}` `{version: 12, os: ubuntu-latest}` `{version: 12, os: windows-latest}` `{version: 14, os: ubuntu-latest}` `{version: 14, os: windows-latest}`",
+      "url": "https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations#adding-a-matrix-strategy-to-your-workflow-job"
+    },
+    {
+      "rule": "Matrix values may be arrays of objects; nested properties are addressed as matrix.<var>.<prop>.",
+      "quote": "A variable configuration in a matrix can be an `array` of `object`s. For example, the following matrix produces 4 jobs with corresponding contexts. ... `- matrix.os: ubuntu-latest matrix.node.version: 20 matrix.node.env: NODE_OPTIONS=--openssl-legacy-provider`",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymatrix"
+    },
+    {
+      "rule": "include semantics: each include object is merged into every ORIGINAL combination it does not conflict with (original values are never overwritten, but values previously added by include may be); if it conflicts with all combinations it becomes a new standalone combination. Later include entries do not extend combinations created by earlier include entries.",
+      "quote": "For each object in the `include` list, the key:value pairs in the object will be added to each of the matrix combinations if none of the key:value pairs overwrite any of the original matrix values. If the object cannot be added to any of the matrix combinations, a new matrix combination will be created instead. Note that the original matrix values will not be overwritten, but added matrix values can be overwritten.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymatrixinclude"
+    },
+    {
+      "rule": "Worked include example (fruit/animal) showing overwrite of include-added values, partial-key matching, and standalone combinations.",
+      "quote": "`{color: green}` is added to all of the original matrix combinations because it can be added without overwriting any part of the original combinations. `{color: pink, animal: cat}` adds `color:pink` only to the original matrix combinations that include `animal: cat`. This overwrites the `color: green` that was added by the previous `include` entry. `{fruit: apple, shape: circle}` adds `shape: circle` only to the original matrix combinations that include `fruit: apple`. `{fruit: banana}` cannot be added to any original matrix combination without overwriting a value, so it is added as an additional matrix combination. `{fruit: banana, animal: cat}` cannot be added to any original matrix combination without overwriting a value, so it is added as an additional matrix combination. It does not add to the `{fruit: banana}` matrix combination because that combination was not one of the original matrix combinations.",
+      "url": "https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations#expanding-or-adding-matrix-configurations"
+    },
+    {
+      "rule": "include-only matrix: with no matrix variables, each include entry is its own job.",
+      "quote": "If you don't specify any matrix variables, all configurations under `include` will run. For example, the following workflow would run two jobs, one for each `include` entry. This lets you take advantage of the matrix strategy without having a fully populated matrix.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymatrixinclude"
+    },
+    {
+      "rule": "exclude semantics: an exclude entry removes every combination that partially matches it (all keys in the entry equal); exclude is applied before include, so include can re-add excluded combinations.",
+      "quote": "An excluded configuration only has to be a partial match for it to be excluded. All `include` combinations are processed after `exclude`. This allows you to use `include` to add back combinations that were previously excluded.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymatrixexclude"
+    },
+    {
+      "rule": "exclude worked example: 2x3x2 = 12 combinations minus one full match and minus two combinations matched by a 2-key partial exclude = 9 jobs.",
+      "quote": "For example, the following workflow will run nine jobs: one job for each of the 12 configurations, minus the one excluded job that matches `{os: macos-latest, version: 12, environment: production}`, and the two excluded jobs that match `{os: windows-latest, version: 16}`.",
+      "url": "https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations#excluding-matrix-configurations"
+    },
+    {
+      "rule": "fail-fast defaults to true: any failing matrix job cancels all in-progress and queued jobs of that matrix. It may be an expression.",
+      "quote": "`jobs.<job_id>.strategy.fail-fast` applies to the entire matrix. If `jobs.<job_id>.strategy.fail-fast` is set to `true` or its expression evaluates to `true`, GitHub will cancel all in-progress and queued jobs in the matrix if any job in the matrix fails. This property defaults to `true`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategyfail-fast"
+    },
+    {
+      "rule": "jobs.<job_id>.continue-on-error interacts with fail-fast: a failing job with continue-on-error: true does not trigger fail-fast cancellation of siblings; it can be an expression over matrix values (e.g. matrix.experimental).",
+      "quote": "You can use `jobs.<job_id>.strategy.fail-fast` and `jobs.<job_id>.continue-on-error` together. For example, the following workflow will start four jobs. For each job, `continue-on-error` is determined by the value of `matrix.experimental`. If any of the jobs with `continue-on-error: false` fail, all jobs that are in progress or queued will be cancelled. If the job with `continue-on-error: true` fails, the other jobs will not be affected.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategyfail-fast"
+    },
+    {
+      "rule": "max-parallel: by default GitHub runs as many matrix jobs in parallel as runners allow; max-parallel caps the simultaneous count (the reference page only states the default; the how-to page gives the cap semantics).",
+      "quote": "By default, GitHub will maximize the number of jobs run in parallel depending on runner availability. — To set the maximum number of jobs that can run simultaneously when using a `matrix` job strategy, use `jobs.<job_id>.strategy.max-parallel`. For example, the following workflow will run a maximum of two jobs at a time, even if there are runners available to run all six jobs at once.",
+      "url": "https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations#defining-the-maximum-number-of-concurrent-jobs"
+    },
+    {
+      "rule": "Expressions are allowed in matrix definitions: whole-matrix or per-variable values may come from contexts (github.event payload) — permitted contexts for jobs.<job_id>.strategy are github, needs, vars, inputs.",
+      "quote": "To create matrices with information about workflow runs, variables, runner environments, jobs, and steps, access contexts using the `${{ <context> }}` expression syntax. ... When a repository dispatch event is created with a payload like the one below, the matrix `version` variable will have a value of `[12, 14, 16]`. `matrix: version: ${{ github.event.client_payload.versions }}` — availability table: `jobs.<job_id>.strategy` | `github, needs, vars, inputs` | None",
+      "url": "https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations#using-contexts-to-create-matrices"
+    },
+    {
+      "rule": "Matrix from a previous job's output: a job output holding a JSON string is parsed with fromJSON(needs.<job>.outputs.<name>) either as the whole matrix (including include lists) or as one variable's array.",
+      "quote": "This workflow sets a JSON matrix in one job, and passes it to the next job using an output and `fromJSON`. ... `strategy: matrix: ${{ fromJSON(needs.job1.outputs.matrix) }}` — You can use the output from one job to define matrices for multiple jobs. ... `strategy: matrix: color: ${{ fromJSON(needs.define-matrix.outputs.colors) }}`",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#fromjson"
+    },
+    {
+      "rule": "The matrix context exists only for matrix jobs and has no standard properties; matrix.<property_name> is typed string.",
+      "quote": "There are no standard properties in the `matrix` context, only those which are defined in the workflow file. `matrix` | `object` | This context is only available for jobs in a matrix, and changes for each job in a workflow run. You can access this context from any job or step in a workflow. ... `matrix.<property_name>` | `string` | The value of a matrix property.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#matrix-context"
+    },
+    {
+      "rule": "strategy context: fail-fast (boolean), job-index (zero-based), job-total (count, not zero-based), max-parallel.",
+      "quote": "`strategy.fail-fast` | `boolean` | When this evaluates to `true`, all in-progress jobs are canceled if any job in a matrix fails. ... `strategy.job-index` | `number` | The index of the current job in the matrix. **Note:** This number is a zero-based number. The first job's index in the matrix is `0`. `strategy.job-total` | `number` | The total number of jobs in the matrix. **Note:** This number **is not** a zero-based number. For example, for a matrix with four jobs, the value of `job-total` is `4`. `strategy.max-parallel` | `number` | The maximum number of jobs that can run simultaneously when using a `matrix` job strategy.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#strategy-context"
+    },
+    {
+      "rule": "Job-level `if` runs before matrix expansion, so it cannot depend on matrix values; a step-level `if` can (matrix is in the steps.if context list).",
+      "quote": "The `jobs.<job_id>.if` condition is evaluated before [`jobs.<job_id>.strategy.matrix`](/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymatrix) is applied.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idif"
+    },
+    {
+      "rule": "Matrix values can drive runs-on and other job keys (availability: runs-on lists matrix and strategy).",
+      "quote": "Each job will set the `runs-on` value to the current `os` value and will pass the current `version` value to the `actions/setup-node` action. `runs-on: ${{ matrix.os }}`",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymatrix"
+    },
+    {
+      "rule": "Outputs of matrix jobs are merged into a single needs.<job>.outputs map; duplicate names are overwritten by whichever matrix job finishes last (order not guaranteed).",
+      "quote": "Matrices can be used to generate multiple outputs of different names. When using a matrix, job outputs will be combined from all jobs inside the matrix. ... Actions does not guarantee the order that matrix jobs will run in. Ensure that the output name is unique, otherwise the last matrix job that runs will override the output value.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idoutputs"
+    }
+  ],
+  "notes": [
+    "Sources fetched 2026-09-12 with `curl -sL -H \"Accept: text/markdown\"`; raw markdown saved under C:\\Users\\barba\\AppData\\Local\\Temp\\claude\\C--Users-barba\\9063165e-7839-40da-bf70-6f65a7742448\\scratchpad\\wdmjr-research\\ (contexts.md, expressions.md, events.md, syntax.md, variables.md, run-job-variations.md, use-conditions.md, 42939aed.md = managing-a-merge-queue, pr-reference.md). All quotes were copied from those files; table rows were only whitespace-collapsed.",
+    "DISCREPANCY (pull_request_target GITHUB_REF): the events page table row says `GITHUB_REF` = 'Default branch' and 'Last commit on default branch', while the contexts and variables pages say '`pull_request_target` events have the `ref` from the base branch'. Both are official; they coincide when the PR targets the default branch. The simulator should surface both quotes rather than pick one.",
+    "github.ref_type is NOT documented per event anywhere in the fetched pages; the only statement is 'Valid values are `branch` or `tag`'. Every per-event ref_type value above is an inference from the documented ref format (refs/heads/* → branch, refs/tags/* → tag) and is labelled as such.",
+    "github.head_ref / github.base_ref: the contexts and variables pages state they are 'only available when the event that triggers a workflow run is either `pull_request` or `pull_request_target`'. For pull_request_review, pull_request_review_comment, issue_comment and merge_group the docs do not say they are set; combined with the general rule 'If you attempt to dereference a nonexistent property, it will evaluate to an empty string', expressions like `github.head_ref == ''` would be true there — that last step is an inference from the general rule, not a per-event statement.",
+    "merge_group ref format: GitHub Docs only document the branch prefix `gh-readonly-queue/{base_branch}` (managing-a-merge-queue page). The commonly observed full pattern `refs/heads/gh-readonly-queue/{base_branch}/pr-{number}-{base_sha}` is NOT documented on any fetched GitHub Docs page — write 'not documented' for the suffix.",
+    "github.ref_name for a pull_request closed-by-merge: docs only say 'For pull requests that were not merged, the format is `<pr_number>/merge`'; the merged case is not documented for ref_name (ref itself becomes the base branch, e.g. `/refs/heads/main` — note the docs' example literally has a leading slash, which is almost certainly a typo in the docs).",
+    "GITHUB_SHA for pull_request / pull_request_review is the MERGE COMMIT on refs/pull/N/merge, not the PR head; the head commit is `github.event.pull_request.head.sha`. For push the SHA 'reverts to the default branch' when the pushed ref is a deletion.",
+    "Events whose section carries 'This event will only trigger a workflow run if the workflow file exists on the default branch': delete, discussion, issue_comment, issues, label, repository_dispatch, schedule, workflow_dispatch, workflow_run. push explicitly 'includes workflows that are not merged into the default branch'. pull_request runs against the merge branch; pull_request_target runs in the default-branch context.",
+    "Default activity types when `types` is omitted: pull_request and pull_request_target default to opened, synchronize, reopened; every other multi-type event in scope (issues, issue_comment, label, discussion, release, workflow_run, pull_request_review, merge_group) defaults to ALL activity types ('By default, all activity types trigger workflows that run on this event').",
+    "The reference page entry for `jobs.<job_id>.strategy.max-parallel` contains only the sentence 'By default, GitHub will maximize the number of jobs run in parallel depending on runner availability.'; the cap semantics come from the how-to page (run-job-variations). Both URLs are cited.",
+    "The old URL /en/actions/how-tos/write-workflows/choose-when-workflows-run/use-conditions-to-control-job-execution returns 404; the live page is .../control-jobs-with-conditions (reached via redirect from /en/actions/using-jobs/using-conditions-to-control-job-execution). /en/actions/how-tos/write-workflows/choose-what-workflows-do/use-jobs-in-a-workflow also 404s; the authoritative `needs` text is in the workflow-syntax reference.",
+    "needs.<job_id>.result has four values (success, failure, cancelled, skipped) but job.status has only three (success, failure, cancelled) — a job never observes its own status as skipped.",
+    "The context-availability table is reproduced in full and verbatim (35 rows) inside expression_semantics so the simulator can validate every key; the parent should treat the row order as insignificant.",
+    "No rule in this output was invented: where the docs are silent the field says 'not documented' or is labelled as an inference."
+  ]
+}

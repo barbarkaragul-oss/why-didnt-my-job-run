@@ -1,0 +1,1 @@
+{"actions":[],"payload":{"schedule":"0 6 * * 1","repository":{"name":"octo-repo","full_name":"octo-org/octo-repo","default_branch":"main","owner":{"login":"octo-org"}},"sender":{"login":"octocat"}}}

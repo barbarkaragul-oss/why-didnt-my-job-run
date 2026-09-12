@@ -1,0 +1,1416 @@
+{
+  "pattern_rules": [
+    {
+      "rule": "`*` matches zero or more characters but never `/`.",
+      "quote": "`*`: Matches zero or more characters, but does not match the `/` character. For example, `Octo*` matches `Octocat`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet"
+    },
+    {
+      "rule": "`**` matches zero or more of any character, including `/`.",
+      "quote": "`**`: Matches zero or more of any character.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet"
+    },
+    {
+      "rule": "`?` matches zero or one of the preceding character (regex-like quantifier, not a single-char wildcard).",
+      "quote": "`?`: Matches zero or one of the preceding character.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet"
+    },
+    {
+      "rule": "`+` matches one or more of the preceding character.",
+      "quote": "`+`: Matches one or more of the preceding character.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet"
+    },
+    {
+      "rule": "`[]` is a character class of alphanumerics; ranges are limited to a-z, A-Z, 0-9.",
+      "quote": "`[]` Matches one alphanumeric character listed in the brackets or included in ranges. Ranges can only include `a-z`, `A-Z`, and `0-9`. For example, the range`[0-9a-z]` matches any digit or lowercase letter. For example, `[CB]at` matches `Cat` or `Bat` and `[1-2]00` matches `100` and `200`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet"
+    },
+    {
+      "rule": "`!` negates only when it is the first character of a pattern; elsewhere it is literal.",
+      "quote": "`!`: At the start of a pattern makes it negate previous positive patterns. It has no special meaning if not the first character.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet"
+    },
+    {
+      "rule": "YAML quoting: patterns starting with `*`, `[` or `!` must be quoted; in a flow sequence any pattern containing `[` or `]` must be quoted, otherwise the workflow fails to parse.",
+      "quote": "The characters `*`, `[`, and `!` are special characters in YAML. If you start a pattern with `*`, `[`, or `!`, you must enclose the pattern in quotes. Also, if you use a flow sequence with a pattern containing `[` and/or `]`, the pattern must be enclosed in quotes.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet"
+    },
+    {
+      "rule": "Unquoted `**/README.md` or unquoted `release/v[0-9].[0-9]` inside `[ ]` is a parse error that prevents the workflow from running (docs example block).",
+      "quote": "# Valid\npaths:\n  - '**/README.md'\n\n# Invalid - creates a parse error that\n# prevents your workflow from running.\npaths:\n  - **/README.md\n\n# Valid\nbranches: [ main, 'release/v[0-9].[0-9]' ]\n\n# Invalid - creates a parse error\nbranches: [ main, release/v[0-9].[0-9] ]",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet"
+    },
+    {
+      "rule": "Ordering of negation (branches): a negative match after a positive match excludes; a positive match after a negative match re-includes.",
+      "quote": "The order that you define patterns matters.\n\n* A matching negative pattern (prefixed with `!`) after a positive match will exclude the Git ref.\n* A matching positive pattern after a negative match will include the Git ref again.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-and-excluding-branches"
+    },
+    {
+      "rule": "Ordering of negation (paths): same sequential semantics as branches.",
+      "quote": "The order that you define `paths` patterns matters:\n\n* A matching negative pattern (prefixed with `!`) after a positive match will exclude the path.\n* A matching positive pattern after a negative match will include the path again.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-and-excluding-paths"
+    },
+    {
+      "rule": "Ordering of negation (workflow_run branches): same sequential semantics.",
+      "quote": "The order that you define patterns matters.\n\n* A matching negative pattern (prefixed with `!`) after a positive match will exclude the branch.\n* A matching positive pattern after a negative match will include the branch again.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_runbranchesbranches-ignore"
+    },
+    {
+      "rule": "Path cheat sheet restates sequential evaluation and re-inclusion.",
+      "quote": "Patterns are checked sequentially. A pattern that negates a previous pattern will re-include file paths.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "rule": "A `branches` list that uses `!` must contain at least one positive pattern; exclusion-only lists belong in `branches-ignore`.",
+      "quote": "If you define a branch with the `!` character, you must also define at least one branch without the `!` character. If you only want to exclude branches, use `branches-ignore` instead.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-and-excluding-branches"
+    },
+    {
+      "rule": "Same at-least-one-positive rule for `tags` with `!`.",
+      "quote": "Similarly, if you define a tag with the `!` character, you must also define at least one tag without the `!` character. If you only want to exclude tags, use `tags-ignore` instead.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-and-excluding-branches-and-tags"
+    },
+    {
+      "rule": "Same at-least-one-positive rule for `paths` with `!`.",
+      "quote": "If you define a path with the `!` character, you must also define at least one path without the `!` character. If you only want to exclude paths, use `paths-ignore` instead.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-and-excluding-paths"
+    },
+    {
+      "rule": "`branches` and `branches-ignore` are mutually exclusive on the same event (pull_request / pull_request_target).",
+      "quote": "Use the `branches` filter when you want to include branch name patterns or when you want to both include and exclude branch names patterns. Use the `branches-ignore` filter when you only want to exclude branch name patterns. You cannot use both the `branches` and `branches-ignore` filters for the same event in a workflow.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpull_requestpull_request_targetbranchesbranches-ignore"
+    },
+    {
+      "rule": "`branches`/`branches-ignore` and `tags`/`tags-ignore` are each mutually exclusive pairs on `push`.",
+      "quote": "Use the `branches` filter when you want to include branch name patterns or when you want to both include and exclude branch names patterns. Use the `branches-ignore` filter when you only want to exclude branch name patterns. You cannot use both the `branches` and `branches-ignore` filters for the same event in a workflow.\n\nUse the `tags` filter when you want to include tag name patterns or when you want to both include and exclude tag names patterns. Use the `tags-ignore` filter when you only want to exclude tag name patterns. You cannot use both the `tags` and `tags-ignore` filters for the same event in a workflow.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushbranchestagsbranches-ignoretags-ignore"
+    },
+    {
+      "rule": "`paths` and `paths-ignore` are mutually exclusive on the same event.",
+      "quote": "Use the `paths` filter when you want to include file path patterns or when you want to both include and exclude file path patterns. Use the `paths-ignore` filter when you only want to exclude file path patterns. You cannot use both the `paths` and `paths-ignore` filters for the same event in a workflow. If you want to both include and exclude path patterns for a single event, use the `paths` filter prefixed with the `!` character to indicate which paths should be excluded.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore"
+    },
+    {
+      "rule": "`branches` and `branches-ignore` are mutually exclusive on `workflow_run`; use `!` inside `branches` to combine.",
+      "quote": "You cannot use both the `branches` and `branches-ignore` filters for the same event in a workflow. If you want to both include and exclude branch patterns for a single event, use the `branches` filter along with the `!` character to indicate which branches should be excluded.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_runbranchesbranches-ignore"
+    },
+    {
+      "rule": "On `push`: defining only a branch filter means tag pushes never run (and vice versa); defining neither runs for both; branch filter AND path filter must both pass.",
+      "quote": "If you define only `tags`/`tags-ignore` or only `branches`/`branches-ignore`, the workflow won't run for events affecting the undefined Git ref. If you define neither `tags`/`tags-ignore` or `branches`/`branches-ignore`, the workflow will run for events affecting either branches or tags. If you define both `branches`/`branches-ignore` and `paths`/`paths-ignore`, the workflow will only run when both filters are satisfied.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushbranchestagsbranches-ignoretags-ignore"
+    },
+    {
+      "rule": "On pull_request / pull_request_target: branch filter AND path filter must both be satisfied.",
+      "quote": "If you define both `branches`/`branches-ignore` and `paths`/`paths-ignore`, the workflow will only run when both filters are satisfied.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpull_requestpull_request_targetbranchesbranches-ignore"
+    },
+    {
+      "rule": "Branch/tag patterns are evaluated against the Git ref's name (refs/heads/..., refs/tags/...), i.e. the short name after the prefix.",
+      "quote": "The patterns defined in `branches` and `tags` are evaluated against the Git ref's name. For example, the following workflow would run whenever there is a `push` event to:\n\n* A branch named `main` (`refs/heads/main`)\n* A branch named `mona/octocat` (`refs/heads/mona/octocat`)\n* A branch whose name starts with `releases/`, like `releases/10` (`refs/heads/releases/10`)\n* A tag named `v2` (`refs/tags/v2`)\n* A tag whose name starts with `v1.`, like `v1.9.1` (`refs/tags/v1.9.1`)",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-branches-and-tags"
+    },
+    {
+      "rule": "For pull_request/pull_request_target the branch filter matches the pull request's TARGET (base) branch, not the head branch.",
+      "quote": "When using the `pull_request` and `pull_request_target` events, you can configure a workflow to run only for pull requests that target specific branches.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpull_requestpull_request_targetbranchesbranches-ignore"
+    },
+    {
+      "rule": "To filter on the head branch of a PR the docs say to use a job `if:` with `github.head_ref`, not the `branches` filter.",
+      "quote": "To run a job based on the pull request's head branch name (as opposed to the pull request's base branch name), use the `github.head_ref` context in a conditional. For example, this workflow will run whenever a pull request is opened, but the `run_if` job will only execute if the head of the pull request is a branch whose name starts with `releases/`:",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#running-your-pull_request-workflow-based-on-the-head-or-base-branch-of-a-pull-request"
+    },
+    {
+      "rule": "Branch-name glob alphabet is `*`, `**`, `+`, `?`, `!` 'and others'; a literal match of such characters requires escaping each with `\\`.",
+      "quote": "The `branches`, `branches-ignore`, `tags`, and `tags-ignore` keywords accept glob patterns that use characters like `*`, `**`, `+`, `?`, `!` and others to match more than one branch or tag name. If a name contains any of these characters and you want a literal match, you need to *escape* each of these special characters with `\\`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushbranchestagsbranches-ignoretags-ignore"
+    },
+    {
+      "rule": "Path glob alphabet is described as `*` and `**` wildcards (the cheat sheet additionally shows `?` and `!` in path examples).",
+      "quote": "The `paths` and `paths-ignore` keywords accept glob patterns that use the `*` and `**` wildcard characters to match more than one path name.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore"
+    },
+    {
+      "rule": "Path patterns are anchored: they must match the whole path from the repository root.",
+      "quote": "Path patterns must match the whole path, and start from the repository's root.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "rule": "Path filters are ignored for tag pushes.",
+      "quote": "When using the `push` and `pull_request` events, you can configure a workflow to run based on what file paths are changed. Path filters are not evaluated for pushes of tags.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore"
+    },
+    {
+      "rule": "`paths` is satisfied when at least one changed file matches.",
+      "quote": "If at least one path matches a pattern in the `paths` filter, the workflow runs. For example, the following workflow would run anytime you push a JavaScript file (`.js`).",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-paths"
+    },
+    {
+      "rule": "`paths-ignore` suppresses the run only when ALL changed files match; any single non-matching file makes the workflow run.",
+      "quote": "When all the path names match patterns in `paths-ignore`, the workflow will not run. If any path names do not match patterns in `paths-ignore`, even if some path names match the patterns, the workflow will run.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-excluding-paths"
+    },
+    {
+      "rule": "A literal pattern matches the exact branch/tag name.",
+      "quote": "Matches the exact name of a branch or tag name.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    },
+    {
+      "rule": "`'**'` is the implicit default when no branches/tags filter is given.",
+      "quote": "Matches all branch and tag names. This is the default behavior when you don't use a `branches` or `tags` filter.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    },
+    {
+      "rule": "`'**'` is the implicit default when no path filter is given.",
+      "quote": "The `**` wildcard matches any character including slash (`/`). This is the default behavior when you don't use a `path` filter.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "rule": "`'*'` alone matches only names without a slash.",
+      "quote": "Matches all branch and tag names that don't contain a slash (`/`). The `*` character is a special character in YAML. When you start a pattern with `*`, you must use quotes.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    },
+    {
+      "rule": "`branches-ignore` / `tags-ignore`: a match means the workflow does not run.",
+      "quote": "When a pattern matches the `branches-ignore` or `tags-ignore` pattern, the workflow will not run. The patterns defined in `branches` and `tags` are evaluated against the Git ref's name.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-excluding-branches-and-tags"
+    },
+    {
+      "rule": "workflow_run branches filter applies to the branch the TRIGGERING workflow ran on.",
+      "quote": "When using the `workflow_run` event, you can specify what branches the triggering workflow must run on in order to trigger your workflow.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_runbranchesbranches-ignore"
+    },
+    {
+      "rule": "Workflows skipped by branch/path filters leave their checks 'Pending', which blocks merging when those checks are required.",
+      "quote": "If a workflow is skipped due to branch filtering, path filtering, or a commit message, then checks associated with that workflow will remain in a \"Pending\" state. A pull request that requires those checks to be successful will be blocked from merging.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-branches"
+    },
+    {
+      "rule": "Multiple events are OR-ed; simultaneous events create multiple runs.",
+      "quote": "If you specify multiple events, only one of those events needs to occur to trigger your workflow. If multiple triggering events for your workflow occur at the same time, multiple workflow runs will be triggered.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#using-multiple-events"
+    },
+    {
+      "rule": "Multiple activity types are OR-ed; simultaneous activity types create one run each (issue opened with two labels = 3 runs).",
+      "quote": "If you specify multiple activity types, only one of those event activity types needs to occur to trigger your workflow. If multiple triggering event activity types for your workflow occur at the same time, multiple workflow runs will be triggered. For example, the following workflow triggers when an issue is opened or labeled. If an issue with two labels is opened, three workflow runs will start: one for the issue opened event and two for the two issue labeled events.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#using-activity-types"
+    },
+    {
+      "rule": "When mixing configured and unconfigured events, every event must be a mapping key ending in `:`.",
+      "quote": "If you specify activity types or filters for an event and your workflow triggers on multiple events, you must configure each event separately. You must append a colon (`:`) to all events, including events without configuration.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#using-activity-types-and-filters-with-multiple-events"
+    },
+    {
+      "rule": "`types` narrows activity; it is unnecessary for single-activity events.",
+      "quote": "Use `on.<event_name>.types` to define the type of activity that will trigger a workflow run. Most GitHub events are triggered by more than one type of activity. For example, the `label` is triggered when a label is `created`, `edited`, or `deleted`. The `types` keyword enables you to narrow down activity that causes the workflow to run. When only one activity type triggers a webhook event, the `types` keyword is unnecessary.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onevent_nametypes"
+    },
+    {
+      "rule": "Specifying `types: [created]` on `label` excludes edited/deleted.",
+      "quote": "For example, the `issue_comment` event has the `created`, `edited`, and `deleted` activity types. If your workflow triggers on the `label` event, it will run whenever a label is created, edited, or deleted. If you specify the `created` activity type for the `label` event, your workflow will run when a label is created but not when a label is edited or deleted.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#using-activity-types"
+    },
+    {
+      "rule": "`on: push` with no filter runs for a push to any branch.",
+      "quote": "For example, a workflow with the following `on` value will run when a push is made to any branch in the workflow's repository:\n\n```yaml\non: push\n```",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#using-a-single-event"
+    },
+    {
+      "rule": "Commit-message skip strings suppress push/pull_request runs (but not pull_request_target).",
+      "quote": "Workflows that would otherwise be triggered using `on: push` or `on: pull_request` won't be triggered if you add any of the following strings to the commit message in a push, or the HEAD commit of a pull request:\n\n* `[skip ci]`\n* `[ci skip]`\n* `[no ci]`\n* `[skip actions]`\n* `[actions skip]`",
+      "url": "https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs"
+    },
+    {
+      "rule": "Skip instructions apply only to push and pull_request.",
+      "quote": "Skip instructions only apply to the `push` and `pull_request` events. For example, adding `[skip ci]` to a commit message won't stop a workflow that's triggered `on: pull_request_target` from running.",
+      "url": "https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs"
+    },
+    {
+      "rule": "`skip-checks` commit trailer is an alternative skip mechanism.",
+      "quote": "Alternatively, you can add a `skip-checks` trailer to your commit message. The trailers section should be included at the end of your commit message and be preceded by two empty lines. If you already have other trailers in your commit message, `skip-checks` should be last. You can use either of the following:\n\n* `skip-checks:true`\n* `skip-checks: true`",
+      "url": "https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs"
+    },
+    {
+      "rule": "Events caused by GITHUB_TOKEN do not create runs, except workflow_dispatch, repository_dispatch, and pull_request opened/synchronize/reopened (which create approval-required runs).",
+      "quote": "When you use the repository's `GITHUB_TOKEN` to perform tasks, events triggered by the `GITHUB_TOKEN` will not create a new workflow run, with the following exceptions:\n\n* `workflow_dispatch` and `repository_dispatch` events always create workflow runs.\n* `pull_request` events with the `opened`, `synchronize`, or `reopened` activity types: when a workflow using `GITHUB_TOKEN` creates or updates a pull request, the resulting `pull_request` event creates workflow runs in an **approval-required** state.",
+      "url": "https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow"
+    },
+    {
+      "rule": "Case sensitivity of glob matching: not documented.",
+      "quote": "not documented",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet"
+    },
+    {
+      "rule": "Whether `!` negation is permitted inside `branches-ignore`, `tags-ignore` or `paths-ignore` lists: not documented (docs only show `!` inside `branches`, `tags` and `paths`).",
+      "quote": "not documented",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet"
+    },
+    {
+      "rule": "Whether branch/tag patterns are anchored (must match the whole ref name) is not stated explicitly for branches/tags; it is stated only for paths. Examples (e.g. `v2*` matching `v2.9`, `feature/*` matching `feature/my-branch`) are consistent with whole-name matching.",
+      "quote": "not documented",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    }
+  ],
+  "pattern_examples": [
+    {
+      "pattern": "feature/*",
+      "kind": "branch",
+      "matches": [
+        "feature/my-branch",
+        "feature/your-branch"
+      ],
+      "does_not_match": [],
+      "quote": "The `*` wildcard matches any character, but does not match slash (`/`).",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    },
+    {
+      "pattern": "feature/**",
+      "kind": "branch",
+      "matches": [
+        "feature/beta-a/my-branch",
+        "feature/your-branch",
+        "feature/mona/the/octocat"
+      ],
+      "does_not_match": [],
+      "quote": "The `**` wildcard matches any character including slash (`/`) in branch and tag names.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    },
+    {
+      "pattern": "main",
+      "kind": "branch",
+      "matches": [
+        "main"
+      ],
+      "does_not_match": [],
+      "quote": "Matches the exact name of a branch or tag name.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    },
+    {
+      "pattern": "releases/mona-the-octocat",
+      "kind": "branch",
+      "matches": [
+        "releases/mona-the-octocat"
+      ],
+      "does_not_match": [],
+      "quote": "Matches the exact name of a branch or tag name.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    },
+    {
+      "pattern": "'*'",
+      "kind": "branch",
+      "matches": [
+        "main",
+        "releases"
+      ],
+      "does_not_match": [],
+      "quote": "Matches all branch and tag names that don't contain a slash (`/`). The `*` character is a special character in YAML. When you start a pattern with `*`, you must use quotes.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    },
+    {
+      "pattern": "'**'",
+      "kind": "branch",
+      "matches": [
+        "all/the/branches",
+        "every/tag"
+      ],
+      "does_not_match": [],
+      "quote": "Matches all branch and tag names. This is the default behavior when you don't use a `branches` or `tags` filter.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    },
+    {
+      "pattern": "'*feature'",
+      "kind": "branch",
+      "matches": [
+        "mona-feature",
+        "feature",
+        "ver-10-feature"
+      ],
+      "does_not_match": [],
+      "quote": "The `*` character is a special character in YAML. When you start a pattern with `*`, you must use quotes.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    },
+    {
+      "pattern": "v2*",
+      "kind": "tag",
+      "matches": [
+        "v2",
+        "v2.0",
+        "v2.9"
+      ],
+      "does_not_match": [],
+      "quote": "Matches branch and tag names that start with `v2`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    },
+    {
+      "pattern": "v[12].[0-9]+.[0-9]+",
+      "kind": "tag",
+      "matches": [
+        "v1.10.1",
+        "v2.0.0"
+      ],
+      "does_not_match": [],
+      "quote": "Matches all semantic versioning branches and tags with major version 1 or 2.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-branches-and-tags"
+    },
+    {
+      "pattern": "'*'",
+      "kind": "path",
+      "matches": [
+        "README.md",
+        "server.rb"
+      ],
+      "does_not_match": [],
+      "quote": "The `*` wildcard matches any character, but does not match slash (`/`). The `*` character is a special character in YAML. When you start a pattern with `*`, you must use quotes.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "'*.jsx?'",
+      "kind": "path",
+      "matches": [
+        "page.js",
+        "page.jsx"
+      ],
+      "does_not_match": [],
+      "quote": "The `?` character matches zero or one of the preceding character.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "'**'",
+      "kind": "path",
+      "matches": [
+        "all/the/files.md"
+      ],
+      "does_not_match": [],
+      "quote": "The `**` wildcard matches any character including slash (`/`). This is the default behavior when you don't use a `path` filter.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "'*.js'",
+      "kind": "path",
+      "matches": [
+        "app.js",
+        "index.js"
+      ],
+      "does_not_match": [],
+      "quote": "The `*` wildcard matches any character, but does not match slash (`/`). Matches all `.js` files at the root of the repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "'**.js'",
+      "kind": "path",
+      "matches": [
+        "index.js",
+        "js/index.js",
+        "src/js/app.js"
+      ],
+      "does_not_match": [],
+      "quote": "Matches all `.js` files in the repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "docs/*",
+      "kind": "path",
+      "matches": [
+        "docs/README.md",
+        "docs/file.txt"
+      ],
+      "does_not_match": [],
+      "quote": "All files within the root of the `docs` directory only, at the root of the repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "docs/**",
+      "kind": "path",
+      "matches": [
+        "docs/README.md",
+        "docs/mona/octocat.txt"
+      ],
+      "does_not_match": [],
+      "quote": "Any files in the `docs` directory and its subdirectories at the root of the repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "docs/**/*.md",
+      "kind": "path",
+      "matches": [
+        "docs/README.md",
+        "docs/mona/hello-world.md",
+        "docs/a/markdown/file.md"
+      ],
+      "does_not_match": [],
+      "quote": "A file with a `.md` suffix anywhere in the `docs` directory.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "'**/docs/**'",
+      "kind": "path",
+      "matches": [
+        "docs/hello.md",
+        "dir/docs/my-file.txt",
+        "space/docs/plan/space.doc"
+      ],
+      "does_not_match": [],
+      "quote": "Any files in a `docs` directory anywhere in the repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "'**/README.md'",
+      "kind": "path",
+      "matches": [
+        "README.md",
+        "js/README.md"
+      ],
+      "does_not_match": [],
+      "quote": "A README.md file anywhere in the repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "'**/*src/**'",
+      "kind": "path",
+      "matches": [
+        "a/src/app.js",
+        "my-src/code/js/app.js"
+      ],
+      "does_not_match": [],
+      "quote": "Any file in a folder with a `src` suffix anywhere in the repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "'**/*-post.md'",
+      "kind": "path",
+      "matches": [
+        "my-post.md",
+        "path/their-post.md"
+      ],
+      "does_not_match": [],
+      "quote": "A file with the suffix `-post.md` anywhere in the repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "'**/migrate-*.sql'",
+      "kind": "path",
+      "matches": [
+        "migrate-10909.sql",
+        "db/migrate-v1.0.sql",
+        "db/sept/migrate-v1.sql"
+      ],
+      "does_not_match": [],
+      "quote": "A file with the prefix `migrate-` and suffix `.sql` anywhere in the repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "'*.md' + '!README.md'",
+      "kind": "path",
+      "matches": [
+        "hello.md"
+      ],
+      "does_not_match": [
+        "README.md",
+        "docs/hello.md"
+      ],
+      "quote": "Using an exclamation mark (`!`) in front of a pattern negates it. When a file matches a pattern and also matches a negative pattern defined later in the file, the file will not be included.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "pattern": "'*.md' + '!README.md' + README*",
+      "kind": "path",
+      "matches": [
+        "hello.md",
+        "README.md",
+        "README.doc"
+      ],
+      "does_not_match": [],
+      "quote": "Patterns are checked sequentially. A pattern that negates a previous pattern will re-include file paths.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    }
+  ],
+  "negation_examples": [
+    {
+      "patterns": [
+        "'*.md'",
+        "'!README.md'"
+      ],
+      "kind": "path",
+      "matches": [
+        "hello.md"
+      ],
+      "does_not_match": [
+        "README.md",
+        "docs/hello.md"
+      ],
+      "quote": "Using an exclamation mark (`!`) in front of a pattern negates it. When a file matches a pattern and also matches a negative pattern defined later in the file, the file will not be included.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "patterns": [
+        "'*.md'",
+        "'!README.md'",
+        "README*"
+      ],
+      "kind": "path",
+      "matches": [
+        "hello.md",
+        "README.md",
+        "README.doc"
+      ],
+      "does_not_match": [],
+      "quote": "Patterns are checked sequentially. A pattern that negates a previous pattern will re-include file paths.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths"
+    },
+    {
+      "patterns": [
+        "'releases/**'",
+        "'!releases/**-alpha'"
+      ],
+      "kind": "branch (pull_request target branch)",
+      "matches": [
+        "releases/10",
+        "releases/beta/mona"
+      ],
+      "does_not_match": [
+        "releases/10-alpha",
+        "releases/beta/3-alpha"
+      ],
+      "quote": "The following workflow will run on `pull_request` events for pull requests that target `releases/10` or `releases/beta/mona`, but not for pull requests that target `releases/10-alpha` or `releases/beta/3-alpha` because the negative pattern `!releases/**-alpha` follows the positive pattern.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-and-excluding-branches"
+    },
+    {
+      "patterns": [
+        "'releases/**'",
+        "'!releases/**-alpha'"
+      ],
+      "kind": "branch (push)",
+      "matches": [
+        "releases/10",
+        "releases/beta/mona"
+      ],
+      "does_not_match": [
+        "releases/10-alpha",
+        "releases/beta/3-alpha"
+      ],
+      "quote": "The following workflow will run on pushes to `releases/10` or `releases/beta/mona`, but not on `releases/10-alpha` or `releases/beta/3-alpha` because the negative pattern `!releases/**-alpha` follows the positive pattern.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-and-excluding-branches-and-tags"
+    },
+    {
+      "patterns": [
+        "'releases/**'",
+        "'!releases/**-alpha'"
+      ],
+      "kind": "branch (workflow_run triggering-workflow branch)",
+      "matches": [
+        "releases/10",
+        "releases/beta/mona"
+      ],
+      "does_not_match": [
+        "releases/10-alpha",
+        "releases/beta/3-alpha",
+        "main"
+      ],
+      "quote": "For example, a workflow with the following trigger will run when the workflow named `Build` runs on a branch that is named `releases/10` or `releases/beta/mona` but will not `releases/10-alpha`, `releases/beta/3-alpha`, or `main`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_runbranchesbranches-ignore"
+    },
+    {
+      "patterns": [
+        "'sub-project/**'",
+        "'!sub-project/docs/**'"
+      ],
+      "kind": "path",
+      "matches": [
+        "sub-project/index.js",
+        "sub-project/src/index.js"
+      ],
+      "does_not_match": [
+        "sub-project/docs/readme.md"
+      ],
+      "quote": "This example runs anytime the `push` event includes a file in the `sub-project` directory or its subdirectories, unless the file is in the `sub-project/docs` directory. For example, a push that changed `sub-project/index.js` or `sub-project/src/index.js` will trigger a workflow run, but a push changing only `sub-project/docs/readme.md` will not.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-and-excluding-paths"
+    },
+    {
+      "patterns": [
+        "'mona/octocat'",
+        "'releases/**-alpha'"
+      ],
+      "kind": "branch (branches-ignore, pull_request)",
+      "matches": [],
+      "does_not_match": [
+        "mona/octocat",
+        "releases/beta/3-alpha"
+      ],
+      "quote": "When a pattern matches the `branches-ignore` pattern, the workflow will not run. The patterns defined in `branches-ignore` are evaluated against the Git ref's name. For example, the following workflow would run whenever there is a `pull_request` event unless the pull request is targeting:\n\n* A branch named `mona/octocat` (`refs/heads/mona/octocat`)\n* A branch whose name matches `releases/**-alpha`, like `releases/beta/3-alpha` (`refs/heads/releases/beta/3-alpha`)",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-excluding-branches"
+    },
+    {
+      "patterns": [
+        "branches-ignore: ['mona/octocat', 'releases/**-alpha']",
+        "tags-ignore: [v2, v1.*]"
+      ],
+      "kind": "branch+tag (push branches-ignore/tags-ignore)",
+      "matches": [],
+      "does_not_match": [
+        "mona/octocat",
+        "releases/beta/3-alpha",
+        "v2",
+        "v1.9"
+      ],
+      "quote": "When a pattern matches the `branches-ignore` or `tags-ignore` pattern, the workflow will not run. The patterns defined in `branches` and `tags` are evaluated against the Git ref's name. For example, the following workflow would run whenever there is a `push` event, unless the `push` event is to:\n\n* A branch named `mona/octocat` (`refs/heads/mona/octocat`)\n* A branch whose name matches `releases/**-alpha`, like `releases/beta/3-alpha` (`refs/heads/releases/beta/3-alpha`)\n* A tag named `v2` (`refs/tags/v2`)\n* A tag whose name starts with `v1.`, like `v1.9` (`refs/tags/v1.9`)",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-excluding-branches-and-tags"
+    },
+    {
+      "patterns": [
+        "paths-ignore: ['docs/**']"
+      ],
+      "kind": "path (paths-ignore)",
+      "matches": [],
+      "does_not_match": [
+        "docs/** (only when every changed file is under docs/)"
+      ],
+      "quote": "A workflow with the following path filter will only run on `push` events that include at least one file outside the `docs` directory at the root of the repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-excluding-paths"
+    }
+  ],
+  "events": [
+    {
+      "event": "push",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [
+        "branches",
+        "branches-ignore",
+        "tags",
+        "tags-ignore",
+        "paths",
+        "paths-ignore"
+      ],
+      "github_ref": "Updated ref",
+      "github_sha": "Tip commit pushed to the ref. When you delete a branch, the SHA in the workflow run (and its associated refs) reverts to the default branch of the repository.",
+      "quote": "| [`push`](/en/webhooks/webhook-events-and-payloads#push) | Not applicable | Tip commit pushed to the ref. When you delete a branch, the SHA in the workflow run (and its associated refs) reverts to the default branch of the repository. | Updated ref |\n\nRuns your workflow when you push a commit or tag, or when you create a repository from a template. This includes workflows that are not merged into the default branch.\n\n* Events will not be created if more than 5,000 branches are pushed at once. Events will not be created for tags when more than three tags are pushed at once.\n\nGITHUB_REF (variables page): For workflows triggered by `push`, this is the branch or tag ref that was pushed. ... for branches the format is `refs/heads/<branch_name>` ... For tags it is `refs/tags/<tag_name>`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#push"
+    },
+    {
+      "event": "pull_request",
+      "activity_types": [
+        "assigned",
+        "unassigned",
+        "labeled",
+        "unlabeled",
+        "opened",
+        "edited",
+        "closed",
+        "reopened",
+        "synchronize",
+        "converted_to_draft",
+        "locked",
+        "unlocked",
+        "enqueued",
+        "dequeued",
+        "milestoned",
+        "demilestoned",
+        "ready_for_review",
+        "review_requested",
+        "review_request_removed",
+        "auto_merge_enabled",
+        "auto_merge_disabled"
+      ],
+      "default_activity_types": [
+        "opened",
+        "synchronize",
+        "reopened"
+      ],
+      "supports_filters": [
+        "types",
+        "branches",
+        "branches-ignore",
+        "paths",
+        "paths-ignore"
+      ],
+      "github_ref": "PR merge branch `refs/pull/PULL_REQUEST_NUMBER/merge` (closed-and-merged: the fully qualified ref of the branch it was merged into, e.g. `/refs/heads/main`)",
+      "github_sha": "Last merge commit on the `GITHUB_REF` branch",
+      "quote": "By default, a workflow only runs when a `pull_request` event's activity type is `opened`, `synchronize`, or `reopened`. To trigger workflows by different activity types, use the `types` keyword.\n\nWorkflows will not run on `pull_request` activity if the pull request has a merge conflict. The merge conflict must be resolved first.\n\nThe value of `GITHUB_REF` varies for a closed pull request depending on whether the pull request has been merged or not. If a pull request was closed but not merged, it will be `refs/pull/PULL_REQUEST_NUMBER/merge`. If a pull request was closed as a result of being merged, it will be the fully qualified `ref` of the branch it was merged into, for example `/refs/heads/main`.\n\nNote that `GITHUB_SHA` for this event is the last merge commit of the pull request merge branch. If you want to get the commit ID for the last commit to the head branch of the pull request, use `github.event.pull_request.head.sha` instead.\n\n* `GITHUB_REF` is set to `refs/pull/PULL_REQUEST_NUMBER/merge`\n* `GITHUB_SHA` is the SHA of the merge commit on the merge branch",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request"
+    },
+    {
+      "event": "pull_request_target",
+      "activity_types": [
+        "assigned",
+        "unassigned",
+        "labeled",
+        "unlabeled",
+        "opened",
+        "edited",
+        "closed",
+        "reopened",
+        "synchronize",
+        "converted_to_draft",
+        "locked",
+        "unlocked",
+        "enqueued",
+        "dequeued",
+        "milestoned",
+        "demilestoned",
+        "ready_for_review",
+        "review_requested",
+        "review_request_removed",
+        "auto_merge_enabled",
+        "auto_merge_disabled"
+      ],
+      "default_activity_types": [
+        "opened",
+        "synchronize",
+        "reopened"
+      ],
+      "supports_filters": [
+        "types",
+        "branches",
+        "branches-ignore",
+        "paths",
+        "paths-ignore"
+      ],
+      "github_ref": "Default branch (variables page wording: `pull_request_target` events have the `ref` from the base branch)",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`pull_request`](/en/webhooks/webhook-events-and-payloads#pull_request) | - `assigned` ... - `auto_merge_disabled` | Last commit on default branch | Default branch |\n\nBy default, a workflow only runs when a `pull_request_target` event's activity type is `opened`, `synchronize`, or `reopened`. To trigger workflows by different activity types, use the `types` keyword.\n\nThis event runs in the context of the default branch of the base repository, rather than in the context of the merge commit, as the `pull_request` event does.\n\nTo ensure repository security, branches with names that match certain patterns (such as those which look similar to SHAs) may not trigger workflows with the `pull_request_target` event.\n\nConversely, workflows with the `pull_request_target` event will run even if the pull request has a merge conflict.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_target"
+    },
+    {
+      "event": "release",
+      "activity_types": [
+        "published",
+        "unpublished",
+        "created",
+        "edited",
+        "deleted",
+        "prereleased",
+        "released"
+      ],
+      "default_activity_types": [
+        "published",
+        "unpublished",
+        "created",
+        "edited",
+        "deleted",
+        "prereleased",
+        "released"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Tag ref of release `refs/tags/<tag_name>`",
+      "github_sha": "Last commit in the tagged release",
+      "quote": "| [`release`](/en/webhooks/webhook-events-and-payloads#release) | - `published` - `unpublished` - `created` - `edited` - `deleted` - `prereleased` - `released` | Last commit in the tagged release | Tag ref of release `refs/tags/<tag_name>` |\n\n* Workflows are not triggered for the `created`, `edited`, or `deleted` activity types for draft releases. When you create your release through the GitHub UI, your release may automatically be saved as a draft.\n* The `prereleased` type will not trigger for pre-releases published from draft releases, but the `published` type will trigger. If you want a workflow to run when stable *and* pre-releases publish, subscribe to `published` instead of `released` and `prereleased`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#release"
+    },
+    {
+      "event": "workflow_dispatch",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [],
+      "github_ref": "Branch or tag that received dispatch",
+      "github_sha": "Last commit on the `GITHUB_REF` branch or tag",
+      "quote": "| [workflow_dispatch](/en/webhooks/webhook-events-and-payloads#workflow_dispatch) | Not applicable | Last commit on the `GITHUB_REF` branch or tag | Branch or tag that received dispatch |\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nOn the GitHub UI, the \"Run workflow\" button will be present if the workflow file exists on the default branch. Once a workflow has run at least once, you can dispatch it against any branch or tag via the GitHub API or GitHub CLI.\n\n(workflow-syntax: This trigger only receives events when the workflow file is on the default branch.)",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_dispatch"
+    },
+    {
+      "event": "schedule",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| Not applicable | Not applicable | Last commit on default branch | Default branch |\n\n* This event will only trigger a workflow run if the workflow file exists on the default branch.\n* Scheduled workflows will only run on the default branch.\n* In a public repository, scheduled workflows are automatically disabled when no repository activity has occurred in 60 days.\n\nScheduled workflows run on the latest commit on the default branch. The shortest interval you can run scheduled workflows is once every 5 minutes.\n\nGitHub Actions does not support the non-standard syntax `@yearly`, `@monthly`, `@weekly`, `@daily`, `@hourly`, and `@reboot`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule"
+    },
+    {
+      "event": "issues",
+      "activity_types": [
+        "opened",
+        "edited",
+        "deleted",
+        "transferred",
+        "pinned",
+        "unpinned",
+        "closed",
+        "reopened",
+        "assigned",
+        "unassigned",
+        "labeled",
+        "unlabeled",
+        "locked",
+        "unlocked",
+        "milestoned",
+        "demilestoned",
+        "typed",
+        "untyped",
+        "field_added",
+        "field_removed"
+      ],
+      "default_activity_types": [
+        "opened",
+        "edited",
+        "deleted",
+        "transferred",
+        "pinned",
+        "unpinned",
+        "closed",
+        "reopened",
+        "assigned",
+        "unassigned",
+        "labeled",
+        "unlabeled",
+        "locked",
+        "unlocked",
+        "milestoned",
+        "demilestoned",
+        "typed",
+        "untyped",
+        "field_added",
+        "field_removed"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`issues`](/en/webhooks/webhook-events-and-payloads#issues) | - `opened` - `edited` - `deleted` - `transferred` - `pinned` - `unpinned` - `closed` - `reopened` - `assigned` - `unassigned` - `labeled` - `unlabeled` - `locked` - `unlocked` - `milestoned` - `demilestoned` - `typed` - `untyped` - `field_added` - `field_removed` | Last commit on default branch | Default branch |\n\nMore than one activity type triggers this event. For information about each activity type, see Webhook events and payloads. By default, all activity types trigger workflows that run on this event. You can limit your workflow runs to specific activity types using the `types` keyword.\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nThe `field_added` activity type fires both when a field value is initially set and when an existing value is updated. The `field_removed` activity type fires when a field value is cleared.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issues"
+    },
+    {
+      "event": "issue_comment",
+      "activity_types": [
+        "created",
+        "edited",
+        "deleted"
+      ],
+      "default_activity_types": [
+        "created",
+        "edited",
+        "deleted"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`issue_comment`](/en/webhooks/webhook-events-and-payloads#issue_comment) | - `created` - `edited` - `deleted` | Last commit on default branch | Default branch |\n\nMore than one activity type triggers this event. For information about each activity type, see Webhook events and payloads. By default, all activity types trigger workflows that run on this event. You can limit your workflow runs to specific activity types using the `types` keyword.\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nThe `issue_comment` event occurs for comments on both issues and pull requests. You can use the `github.event.issue.pull_request` property in a conditional to take different action depending on whether the triggering object was an issue or pull request.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment"
+    },
+    {
+      "event": "create",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [],
+      "github_ref": "Branch or tag created",
+      "github_sha": "Last commit on the created branch or tag",
+      "quote": "| [`create`](/en/webhooks/webhook-events-and-payloads#create) | Not applicable | Last commit on the created branch or tag | Branch or tag created |\n\nAn event will not be created when you create more than three tags at once.\n\nRuns your workflow when someone creates a Git reference (Git branch or tag) in the workflow's repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#create"
+    },
+    {
+      "event": "delete",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`delete`](/en/webhooks/webhook-events-and-payloads#delete) | Not applicable | Last commit on default branch | Default branch |\n\n* This event will only trigger a workflow run if the workflow file exists on the default branch.\n* An event will not be created when you delete more than three tags at once.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#delete"
+    },
+    {
+      "event": "workflow_run",
+      "activity_types": [
+        "completed",
+        "requested",
+        "in_progress"
+      ],
+      "default_activity_types": [
+        "completed",
+        "requested",
+        "in_progress"
+      ],
+      "supports_filters": [
+        "types",
+        "branches",
+        "branches-ignore",
+        "workflows"
+      ],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`workflow_run`](/en/webhooks/webhook-events-and-payloads#workflow_run) | - `completed` - `requested` - `in_progress` | Last commit on default branch | Default branch |\n\n* More than one activity type triggers this event. The `requested` activity type does not occur when a workflow is re-run. ... By default, all activity types trigger workflows that run on this event.\n* This event will only trigger a workflow run if the workflow file exists on the default branch.\n* You can't use `workflow_run` to chain together more than three levels of workflows.\n\nIf you specify multiple `workflows` for the `workflow_run` event, only one of the workflows needs to run.\n\nA workflow run is triggered regardless of the conclusion of the previous workflow.\n\nYou can use the `branches` or `branches-ignore` filter to specify what branches the triggering workflow must run on in order to trigger your workflow.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run"
+    },
+    {
+      "event": "merge_group",
+      "activity_types": [
+        "checks_requested"
+      ],
+      "default_activity_types": [
+        "checks_requested"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Ref of the merge group",
+      "github_sha": "SHA of the merge group",
+      "quote": "| [`merge_group`](/en/webhooks/webhook-events-and-payloads#merge_group) | `checks_requested` | SHA of the merge group | Ref of the merge group |\n\n* More than one activity type triggers this event. Although only the `checks_requested` activity type is supported, specifying the activity type will keep your workflow specific if more activity types are added in the future. ... By default, all activity types trigger workflows that run on this event.\n* If your repository uses GitHub Actions to perform required checks on pull requests in your repository, you need to update the workflows to include the `merge_group` event as an additional trigger. Otherwise, status checks will not be triggered when you add a pull request to a merge queue. ... The `merge_group` event is separate from the `pull_request` and `push` events.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#merge_group"
+    },
+    {
+      "event": "repository_dispatch",
+      "activity_types": [
+        "Custom"
+      ],
+      "default_activity_types": [
+        "Custom"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [repository_dispatch](/en/webhooks/webhook-events-and-payloads#repository_dispatch) | Custom | Last commit on default branch | Default branch |\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nWhen you make a request to create a `repository_dispatch` event, you must specify an `event_type` to describe the activity type. By default, all `repository_dispatch` activity types trigger a workflow to run. You can use the `types` keyword to limit your workflow to run when a specific `event_type` value is sent in the `repository_dispatch` webhook payload.\n\nThe `event_type` value is limited to 100 characters.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#repository_dispatch"
+    },
+    {
+      "event": "pull_request_review",
+      "activity_types": [
+        "submitted",
+        "edited",
+        "dismissed"
+      ],
+      "default_activity_types": [
+        "submitted",
+        "edited",
+        "dismissed"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "PR merge branch `refs/pull/PULL_REQUEST_NUMBER/merge`",
+      "github_sha": "Last merge commit on the `GITHUB_REF` branch",
+      "quote": "| [`pull_request_review`](/en/webhooks/webhook-events-and-payloads#pull_request_review) | - `submitted` - `edited` - `dismissed` | Last merge commit on the `GITHUB_REF` branch | PR merge branch `refs/pull/PULL_REQUEST_NUMBER/merge` |\n\nMore than one activity type triggers this event. For information about each activity type, see Webhook events and payloads. By default, all activity types trigger workflows that run on this event. You can limit your workflow runs to specific activity types using the `types` keyword.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_review"
+    },
+    {
+      "event": "pull_request_review_comment",
+      "activity_types": [
+        "created",
+        "edited",
+        "deleted"
+      ],
+      "default_activity_types": [
+        "created",
+        "edited",
+        "deleted"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "PR merge branch `refs/pull/PULL_REQUEST_NUMBER/merge`",
+      "github_sha": "Last merge commit on the `GITHUB_REF` branch",
+      "quote": "| [`pull_request_review_comment`](/en/webhooks/webhook-events-and-payloads#pull_request_review_comment) | - `created` - `edited` - `deleted` | Last merge commit on the `GITHUB_REF` branch | PR merge branch `refs/pull/PULL_REQUEST_NUMBER/merge` |\n\nMore than one activity type triggers this event. For information about each activity type, see Webhook events and payloads. By default, all activity types trigger workflows that run on this event. You can limit your workflow runs to specific activity types using the `types` keyword.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_review_comment"
+    },
+    {
+      "event": "discussion",
+      "activity_types": [
+        "created",
+        "edited",
+        "deleted",
+        "transferred",
+        "pinned",
+        "unpinned",
+        "labeled",
+        "unlabeled",
+        "locked",
+        "unlocked",
+        "category_changed",
+        "answered",
+        "unanswered"
+      ],
+      "default_activity_types": [
+        "created",
+        "edited",
+        "deleted",
+        "transferred",
+        "pinned",
+        "unpinned",
+        "labeled",
+        "unlabeled",
+        "locked",
+        "unlocked",
+        "category_changed",
+        "answered",
+        "unanswered"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`discussion`](/en/webhooks/webhook-events-and-payloads#discussion) | - `created` - `edited` - `deleted` - `transferred` - `pinned` - `unpinned` - `labeled` - `unlabeled` - `locked` - `unlocked` - `category_changed` - `answered` - `unanswered` | Last commit on default branch | Default branch |\n\nMore than one activity type triggers this event. For information about each activity type, see Webhook events and payloads. By default, all activity types trigger workflows that run on this event. You can limit your workflow runs to specific activity types using the `types` keyword.\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nWebhook events for GitHub Discussions are currently in public preview and subject to change.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#discussion"
+    },
+    {
+      "event": "discussion_comment",
+      "activity_types": [
+        "created",
+        "edited",
+        "deleted"
+      ],
+      "default_activity_types": [
+        "created",
+        "edited",
+        "deleted"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`discussion_comment`](/en/webhooks/webhook-events-and-payloads#discussion_comment) | - `created` - `edited` - `deleted` | Last commit on default branch | Default branch |\n\nMore than one activity type triggers this event. For information about each activity type, see Webhook events and payloads. By default, all activity types trigger workflows that run on this event. You can limit your workflow runs to specific activity types using the `types` keyword.\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#discussion_comment"
+    },
+    {
+      "event": "label",
+      "activity_types": [
+        "created",
+        "edited",
+        "deleted"
+      ],
+      "default_activity_types": [
+        "created",
+        "edited",
+        "deleted"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`label`](/en/webhooks/webhook-events-and-payloads#label) | - `created` - `edited` - `deleted` | Last commit on default branch | Default branch |\n\nMore than one activity type triggers this event. For information about each activity type, see Webhook events and payloads. By default, all activity types trigger workflows that run on this event. You can limit your workflow runs to specific activity types using the `types` keyword.\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nIf you want to run your workflow when a label is added to or removed from an issue, pull request, or discussion, use the `labeled` or `unlabeled` activity types for the `issues`, `pull_request`, `pull_request_target`, or `discussion` events instead.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#label"
+    },
+    {
+      "event": "check_run",
+      "activity_types": [
+        "created",
+        "rerequested",
+        "completed",
+        "requested_action"
+      ],
+      "default_activity_types": [
+        "created",
+        "rerequested",
+        "completed",
+        "requested_action"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`check_run`](/en/webhooks/webhook-events-and-payloads#check_run) | - `created` - `rerequested` - `completed` - `requested_action` | Last commit on default branch | Default branch |\n\nMore than one activity type triggers this event. For information about each activity type, see Webhook events and payloads. By default, all activity types trigger workflows that run on this event. You can limit your workflow runs to specific activity types using the `types` keyword.\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nTo prevent recursive workflows, this event does not trigger workflows if the check run's check suite was created by GitHub Actions or if the check suite's head SHA is associated with GitHub Actions.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#check_run"
+    },
+    {
+      "event": "check_suite",
+      "activity_types": [
+        "completed"
+      ],
+      "default_activity_types": [
+        "completed"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`check_suite`](/en/webhooks/webhook-events-and-payloads#check_suite) | - `completed` | Last commit on default branch | Default branch |\n\nMore than one activity type triggers this event. ... Although only the `completed` activity type is supported, specifying the activity type will keep your workflow specific if more activity types are added in the future. By default, all activity types trigger workflows that run on this event.\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nTo prevent recursive workflows, this event does not trigger workflows if the check suite was created by GitHub Actions or if the check suite's head SHA is associated with GitHub Actions.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#check_suite"
+    },
+    {
+      "event": "fork",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`fork`](/en/webhooks/webhook-events-and-payloads#fork) | Not applicable | Last commit on default branch | Default branch |\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nRuns your workflow when someone forks a repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#fork"
+    },
+    {
+      "event": "gollum",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`gollum`](/en/webhooks/webhook-events-and-payloads#gollum) | Not applicable | Last commit on default branch | Default branch |\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nRuns your workflow when someone creates or updates a Wiki page.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#gollum"
+    },
+    {
+      "event": "milestone",
+      "activity_types": [
+        "created",
+        "closed",
+        "opened",
+        "edited",
+        "deleted"
+      ],
+      "default_activity_types": [
+        "created",
+        "closed",
+        "opened",
+        "edited",
+        "deleted"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`milestone`](/en/webhooks/webhook-events-and-payloads#milestone) | - `created` - `closed` - `opened` - `edited` - `deleted` | Last commit on default branch | Default branch |\n\nMore than one activity type triggers this event. For information about each activity type, see Webhook events and payloads. By default, all activity types trigger workflows that run on this event. You can limit your workflow runs to specific activity types using the `types` keyword.\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nIf you want to run your workflow when an issue is added to or removed from a milestone, use the `milestoned` or `demilestoned` activity types for the `issues` event instead.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#milestone"
+    },
+    {
+      "event": "page_build",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`page_build`](/en/webhooks/webhook-events-and-payloads#page_build) | Not applicable | Last commit on default branch | Default branch |\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nRuns your workflow when someone pushes to a branch that is the publishing source for GitHub Pages, if GitHub Pages is enabled for the repository.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#page_build"
+    },
+    {
+      "event": "project",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [],
+      "github_ref": "not documented",
+      "github_sha": "not documented",
+      "quote": "not documented — the 'Events that trigger workflows' page (fetched 2026-09-12) has no `project`, `project_card` or `project_column` section. The webhook reference says of the underlying webhook: \"This event occurs when there is activity relating to a project (classic). ... This event relates to projects (classic) only. For activity relating to the new Projects experience, use the projects_v2 event instead.\" with **Action type:** `closed`, `created`, `deleted`, `edited`, `reopened`.",
+      "url": "https://docs.github.com/en/webhooks/webhook-events-and-payloads#project"
+    },
+    {
+      "event": "public",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`public`](/en/webhooks/webhook-events-and-payloads#public) | Not applicable | Last commit on default branch | Default branch |\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nRuns your workflow when your workflow's repository changes from private to public.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#public"
+    },
+    {
+      "event": "registry_package",
+      "activity_types": [
+        "published",
+        "updated"
+      ],
+      "default_activity_types": [
+        "published",
+        "updated"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Branch or tag of the published package",
+      "github_sha": "Commit of the published package",
+      "quote": "| [`registry_package`](/en/webhooks/webhook-events-and-payloads#package) | - `published` - `updated` | Commit of the published package | Branch or tag of the published package |\n\nMore than one activity type triggers this event. For information about each activity type, see Webhook events and payloads. By default, all activity types trigger workflows that run on this event. You can limit your workflow runs to specific activity types using the `types` keyword.\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nWhen pushing multi-architecture container images, this event occurs once per manifest, so you might observe your workflow triggering multiple times.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#registry_package"
+    },
+    {
+      "event": "status",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`status`](/en/webhooks/webhook-events-and-payloads#status) | Not applicable | Last commit on default branch | Default branch |\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nRuns your workflow when the status of a Git commit changes. For example, commits can be marked as `error`, `failure`, `pending`, or `success`.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#status"
+    },
+    {
+      "event": "watch",
+      "activity_types": [
+        "started"
+      ],
+      "default_activity_types": [
+        "started"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`watch`](/en/webhooks/webhook-events-and-payloads#watch) | - `started` | Last commit on default branch | Default branch |\n\nMore than one activity type triggers this event. Although only the `started` activity type is supported, specifying the activity type will keep your workflow specific if more activity types are added in the future. ... By default, all activity types trigger workflows that run on this event.\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.\n\nRuns your workflow when the workflow's repository is starred.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#watch"
+    },
+    {
+      "event": "branch_protection_rule",
+      "activity_types": [
+        "created",
+        "edited",
+        "deleted"
+      ],
+      "default_activity_types": [
+        "created",
+        "edited",
+        "deleted"
+      ],
+      "supports_filters": [
+        "types"
+      ],
+      "github_ref": "Default branch",
+      "github_sha": "Last commit on default branch",
+      "quote": "| [`branch_protection_rule`](/en/webhooks/webhook-events-and-payloads#branch_protection_rule) | - `created` - `edited` - `deleted` | Last commit on default branch | Default branch |\n\nMore than one activity type triggers this event. For information about each activity type, see Webhook events and payloads. By default, all activity types trigger workflows that run on this event. You can limit your workflow runs to specific activity types using the `types` keyword.\n\nThis event will only trigger a workflow run if the workflow file exists on the default branch.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#branch_protection_rule"
+    },
+    {
+      "event": "deployment",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [],
+      "github_ref": "Branch or tag to be deployed (empty if created with a commit SHA)",
+      "github_sha": "Commit to be deployed",
+      "quote": "| [`deployment`](/en/webhooks/webhook-events-and-payloads#deployment) | Not applicable | Commit to be deployed | Branch or tag to be deployed (empty if created with a commit SHA) |\n\nRuns your workflow when someone creates a deployment in the workflow's repository. Deployments created with a commit SHA may not have a Git ref.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#deployment"
+    },
+    {
+      "event": "deployment_status",
+      "activity_types": [],
+      "default_activity_types": [],
+      "supports_filters": [],
+      "github_ref": "Branch or tag to be deployed (empty if commit)",
+      "github_sha": "Commit to be deployed",
+      "quote": "| [`deployment_status`](/en/webhooks/webhook-events-and-payloads#deployment_status) | Not applicable | Commit to be deployed | Branch or tag to be deployed (empty if commit) |\n\nWhen a deployment status's state is set to `inactive`, a workflow run will not be triggered.\n\nRuns your workflow when a third party provides a deployment status. Deployments created with a commit SHA may not have a Git ref.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#deployment_status"
+    }
+  ],
+  "path_filter_rules": [
+    {
+      "rule": "Path filters compare the changed-file list against `paths`/`paths-ignore`; zero changed files means no run.",
+      "quote": "The filter determines if a workflow should run by evaluating the changed files and running them against the `paths-ignore` or `paths` list. If there are no files changed, the workflow will not run.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#git-diff-comparisons"
+    },
+    {
+      "rule": "Changed files: two-dot diff for pushes, three-dot diff for pull requests.",
+      "quote": "GitHub generates the list of changed files using two-dot diffs for pushes and three-dot diffs for pull requests:",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#git-diff-comparisons"
+    },
+    {
+      "rule": "pull_request: three-dot diff = topic branch tip vs merge base with the base branch.",
+      "quote": "**Pull requests:** Three-dot diffs are a comparison between the most recent version of the topic branch and the commit where the topic branch was last synced with the base branch.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#git-diff-comparisons"
+    },
+    {
+      "rule": "push to existing branch: two-dot diff of before/after SHAs.",
+      "quote": "**Pushes to existing branches:** A two-dot diff compares the head and base SHAs directly with each other.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#git-diff-comparisons"
+    },
+    {
+      "rule": "push to a new branch: two-dot diff against the parent of the deepest pushed commit's ancestor.",
+      "quote": "**Pushes to new branches:** A two-dot diff against the parent of the ancestor of the deepest commit pushed.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#git-diff-comparisons"
+    },
+    {
+      "rule": "Limit: a push with more than 1,000 commits ALWAYS runs regardless of path filter.",
+      "quote": "If a push contains more than 1,000 commits, the workflow will **always** run.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#git-diff-comparisons"
+    },
+    {
+      "rule": "Limit: diff generation timeout means the workflow ALWAYS runs.",
+      "quote": "If generating the diff times out, the workflow will **always** run.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#git-diff-comparisons"
+    },
+    {
+      "rule": "Limit: diff with more than 3,000 files where the matching files are not in the first 3,000 means the workflow does NOT run.",
+      "quote": "If the generated diff contains more than 3,000 files and the files the workflow filter matches are not in the first 3,000 returned by the filter, the workflow will **not** run.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#git-diff-comparisons"
+    },
+    {
+      "rule": "Remedy suggested by docs when limits bite.",
+      "quote": "If you observe these behaviors, you might need to make your filters more specific, or change how you work with pushes and pull requests to generate simpler diffs.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#git-diff-comparisons"
+    },
+    {
+      "rule": "Path filters are not evaluated for tag pushes (tag pushes are governed by tags/tags-ignore only).",
+      "quote": "Path filters are not evaluated for pushes of tags.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore"
+    },
+    {
+      "rule": "`paths`: at least one changed file must match.",
+      "quote": "If at least one path matches a pattern in the `paths` filter, the workflow runs.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-paths"
+    },
+    {
+      "rule": "`paths-ignore`: run is suppressed only when every changed file matches.",
+      "quote": "When all the path names match patterns in `paths-ignore`, the workflow will not run. If any path names do not match patterns in `paths-ignore`, even if some path names match the patterns, the workflow will run.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-excluding-paths"
+    },
+    {
+      "rule": "`paths`/`paths-ignore` AND `branches`/`branches-ignore`: both must be satisfied (push).",
+      "quote": "If you define both `branches`/`branches-ignore` and `paths`/`paths-ignore`, the workflow will only run when both filters are satisfied.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushbranchestagsbranches-ignoretags-ignore"
+    },
+    {
+      "rule": "`paths`/`paths-ignore` AND `branches`/`branches-ignore`: both must be satisfied (pull_request / pull_request_target).",
+      "quote": "If you use both the `branches` filter and the `paths` filter, the workflow will only run when both filters are satisfied. For example, the following workflow will only run when a pull request that includes a change to a JavaScript (`.js`) file is opened on a branch whose name starts with `releases/`:",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#running-your-pull_request-workflow-based-on-files-changed-in-a-pull-request"
+    },
+    {
+      "rule": "Mixing `paths` and `paths-ignore` on one event is not allowed; use `!` inside `paths`.",
+      "quote": "You cannot use both the `paths` and `paths-ignore` filters for the same event in a workflow. If you want to both include and exclude path patterns for a single event, use the `paths` filter prefixed with the `!` character to indicate which paths should be excluded.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore"
+    },
+    {
+      "rule": "Sequential negation semantics for paths.",
+      "quote": "The order that you define `paths` patterns matters:\n\n* A matching negative pattern (prefixed with `!`) after a positive match will exclude the path.\n* A matching positive pattern after a negative match will include the path again.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore"
+    },
+    {
+      "rule": "Path filters are available on push, pull_request and pull_request_target (section title lists exactly these events).",
+      "quote": "## `on.<push|pull_request|pull_request_target>.<paths|paths-ignore>`\n\nWhen using the `push` and `pull_request` events, you can configure a workflow to run based on what file paths are changed.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore"
+    },
+    {
+      "rule": "The push payload seen by Actions does not contain per-commit added/removed/modified file lists, so a simulator cannot derive changed files from `github.event.commits[*]`.",
+      "quote": "The webhook payload available to GitHub Actions does not include the `added`, `removed`, and `modified` attributes in the `commit` object. You can retrieve the full commit object using the API.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#push"
+    },
+    {
+      "rule": "Definition of three-dot vs two-dot diff (Branches reference page the filter docs link to).",
+      "quote": "| Three-dot | `git diff A...B` | The most recent common commit of both branches (merge base) and the most recent version of the topic branch.    |\n| Two-dot   | `git diff A..B`  | The most recent state of the base branch (for example, `main`) and the most recent version of the topic branch. |",
+      "url": "https://docs.github.com/en/pull-requests/reference/branches#three-dot-and-two-dot-git-diff-comparisons"
+    },
+    {
+      "rule": "Three-dot focuses on what the PR introduces; two-dot changes when base moves.",
+      "quote": "Because the three-dot comparison uses the merge base, it focuses on \"what a pull request introduces.\"\n\nWhen you use a two-dot comparison, the diff changes when the base branch is updated, even if you haven't made any changes to the topic branch.",
+      "url": "https://docs.github.com/en/pull-requests/reference/branches#about-three-dot-comparison-on-github"
+    },
+    {
+      "rule": "Skipped-by-path-filter workflows leave checks Pending and block merges that require them.",
+      "quote": "If a workflow is skipped due to path filtering, branch filtering, or a commit message, then checks associated with that workflow will remain in a \"Pending\" state. A pull request that requires those checks to be successful will be blocked from merging.",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-including-paths"
+    }
+  ],
+  "notes": [
+    "Sources fetched 2026-09-12 with `curl -sL -H \"Accept: text/markdown\"`. Canonical pages: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax ; https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows ; https://docs.github.com/en/actions/reference/workflows-and-actions/variables ; https://docs.github.com/en/actions/reference/workflows-and-actions/contexts ; https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow ; https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs ; https://docs.github.com/en/pull-requests/reference/branches ; https://docs.github.com/en/webhooks/webhook-events-and-payloads. The older URLs /en/actions/writing-workflows/workflow-syntax-for-github-actions and /en/actions/using-workflows/events-that-trigger-workflows both 301-redirect to the canonical /en/actions/reference/workflows-and-actions/ pages (verified).",
+    "`project` (and `project_card`, `project_column`) are NOT present on the current 'Events that trigger workflows' page. The schema lists `project`; treat it as an unsupported/undocumented trigger. The webhook reference describes `project` as Projects (classic) only. If the simulator accepts `on: project` it should say 'not documented as an Actions trigger'. No GITHUB_REF/GITHUB_SHA documented.",
+    "The events page also documents `image_version` (not in the schema): table row `| Not applicable | Not applicable | Last commit on default branch | Default branch |`; it has its own filters `names` and `versions`: \"This event supports glob patterns for both image names and versions.\" URL https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#image_version. And `workflow_call` (not in the schema): `| Same as the caller workflow | Not applicable | Same as the caller workflow | Same as the caller workflow |`, URL https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_call.",
+    "`pull_request_comment` is not an event: \"## `pull_request_comment` (use `issue_comment`)\" — https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_comment-use-issue_comment.",
+    "GITHUB_REF general definition (variables page, identical text for `github.ref` on the contexts page): \"The fully-formed ref of the branch or tag that triggered the workflow run. For workflows triggered by `push`, this is the branch or tag ref that was pushed. For workflows triggered by `pull_request` that were not merged, this is the pull request merge branch. If the pull request was merged, this is the branch it was merged into. For workflows triggered by `release`, this is the release tag created. For other triggers, this is the branch or tag ref that triggered the workflow run. This is only set if a branch or tag is available for the event type. The ref given is fully-formed, meaning that for branches the format is `refs/heads/<branch_name>`. For pull request events except `pull_request_target` that were not merged, it is `refs/pull/<pr_number>/merge`. `pull_request_target` events have the `ref` from the base branch. For tags it is `refs/tags/<tag_name>`. For example, `refs/heads/feature-branch-1`.\" — https://docs.github.com/en/actions/reference/workflows-and-actions/variables and https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context.",
+    "GITHUB_SHA general definition (variables page): \"The commit SHA that triggered the workflow. The value of this commit SHA depends on the event that triggered the workflow. For more information, see Events that trigger workflows. For example, `ffac537e6cbbf934b08745a378932722df287a53`.\" — https://docs.github.com/en/actions/reference/workflows-and-actions/variables.",
+    "GITHUB_REF_NAME: \"The short ref name of the branch or tag that triggered the workflow run. This value matches the branch or tag name shown on GitHub. For example, `feature-branch-1`. For pull requests that were not merged, the format is `<pr_number>/merge`.\" GITHUB_REF_TYPE: \"The type of ref that triggered the workflow run. Valid values are `branch` or `tag`.\" GITHUB_BASE_REF / GITHUB_HEAD_REF: \"only set when the event that triggers a workflow run is either `pull_request` or `pull_request_target`\" (values are short names, e.g. `main`, `feature-branch-1`). GITHUB_EVENT_NAME: \"The name of the event that triggered the workflow. For example, `workflow_dispatch`.\" — https://docs.github.com/en/actions/reference/workflows-and-actions/variables.",
+    "Discrepancy worth surfacing in the UI: the events table says pull_request_target GITHUB_REF = \"Default branch\", while the variables/contexts pages say \"`pull_request_target` events have the `ref` from the base branch\". These coincide when the PR targets the default branch; for a PR targeting another branch the docs disagree. Report both citations rather than picking one.",
+    "Default activity types: for every multi-type event except pull_request and pull_request_target the docs say \"By default, all activity types trigger workflows that run on this event.\" For pull_request and pull_request_target the default is exactly `opened`, `synchronize`, `reopened`. For repository_dispatch: \"By default, all `repository_dispatch` activity types trigger a workflow to run\" (activity type = the custom `event_type` string). For events whose table says \"Not applicable\" there are no types and `types:` is meaningless.",
+    "Default-branch gate: the following events carry the note \"This event will only trigger a workflow run if the workflow file exists on the default branch\": branch_protection_rule, check_run, check_suite, delete, discussion, discussion_comment, fork, gollum, issue_comment, issues, label, milestone, page_build, public, registry_package, repository_dispatch, schedule, status, watch, workflow_dispatch, workflow_run. push explicitly says the opposite: \"This includes workflows that are not merged into the default branch.\" create, deployment, deployment_status, merge_group, pull_request, pull_request_target, pull_request_review, pull_request_review_comment, release carry no such note.",
+    "Filter availability by event, per section titles in workflow-syntax: `on.push.<branches|tags|branches-ignore|tags-ignore>`; `on.<pull_request|pull_request_target>.<branches|branches-ignore>`; `on.<push|pull_request|pull_request_target>.<paths|paths-ignore>`; `on.workflow_run.<branches|branches-ignore>` (plus `workflows`, which is required to name the triggering workflow(s)); `on.<event_name>.types` for any event with activity types. No other event documents branches/tags/paths filters; a simulator should flag e.g. `on.release.branches` or `on.schedule.paths` as 'not documented'.",
+    "The `tags` filter is only documented for `push`. pull_request/pull_request_target have no `tags`/`tags-ignore` section. Path filters are 'not evaluated for pushes of tags'.",
+    "General page caveat: \"Not all webhook events trigger workflows.\" — https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#about-events-that-trigger-workflows.",
+    "pull_request from forks: \"For pull requests from a forked repository to the base repository, GitHub sends the `pull_request`, `issue_comment`, `pull_request_review_comment`, `pull_request_review`, and `pull_request_target` events to the base repository. No pull request events occur on the forked repository.\" and \"Workflows triggered by Dependabot pull requests are treated as though they are from a forked repository, and are also subject to these restrictions.\" — https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull-request-events-for-forked-repositories.",
+    "pull_request payload note: \"The `pull_request` webhook event payload is empty for merged pull requests and pull requests that come from forked repositories.\" — https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request.",
+    "schedule syntax details (workflow-syntax #onschedule): POSIX cron, 5 fields, operators `*` `,` `-` `/`, optional `timezone:` IANA string, DST spring-forward advances to next valid time, `github.event.schedule` holds the matching cron string. Non-standard `@daily` etc. are unsupported (events page). The `schedule` event may be delayed under load and dropped if load is high.",
+    "workflow_dispatch inputs: available in `inputs` and `github.event.inputs` contexts; `inputs` preserves booleans; max 25 top-level inputs and 65,535 chars; input types `boolean`, `choice`, `number`, `environment`, `string`. repository_dispatch: max 10 top-level `client_payload` properties, 65,535 chars, `event_type` max 100 chars.",
+    "Not documented anywhere in the fetched pages: case sensitivity of filter globs; whether `!` is honoured inside `*-ignore` lists; explicit anchoring of branch/tag patterns; behaviour when a pattern is an empty string; how `?`/`+` interact with `**`; whether `branches` on pull_request is matched against `refs/heads/<base>` short name versus full ref (docs say 'evaluated against the Git ref's name' and list `main` -> `refs/heads/main`).",
+    "The cheat-sheet table has no explicit 'does not match' column except the negation row; empty `does_not_match` arrays therefore mean 'not documented', not 'matches everything'.",
+    "Scratch copies of every fetched page and the build/verify scripts are in C:\\Users\\barba\\AppData\\Local\\Temp\\claude\\C--Users-barba\\9063165e-7839-40da-bf70-6f65a7742448\\scratchpad\\wdmjr-research\\ (workflow-syntax.md, events.md, variables.md, contexts.md, trigger-a-workflow.md, skip-runs.md, branches-ref.md, pull-requests-ref.md, webhooks.md, build.py, verify.py, out.json). verify.py confirmed every quote fragment appears verbatim in the fetched markdown."
+  ]
+}

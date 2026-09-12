@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why didn't my job run? — GitHub Actions condition simulator</title>
+<meta name="description" content="Paste a GitHub Actions workflow, pick an event, and see which jobs run and why. Runs GitHub's own workflow parser and expression engine in your browser; nothing is uploaded.">
+<meta property="og:title" content="Why didn't my job run?">
+<meta property="og:description" content="Paste a GitHub Actions workflow, pick the event, see which jobs run and why. GitHub's own parser and expression engine, in your browser.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤔</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Why didn't my job run?</h1>
+    <p class="tagline">Paste a GitHub Actions workflow, pick the event, see which jobs run and why. This page runs GitHub's own workflow parser and expression engine in your browser. Nothing is uploaded.</p>
+  </div>
+  <nav class="links">
+    <a href="https://github.com/barbarkaragul-oss/why-didnt-my-job-run">GitHub</a>
+    <a href="#how">How it works</a>
+    <button id="theme" type="button" title="Toggle theme">Theme</button>
+  </nav>
+</header>
+
+<main class="layout">
+  <section class="pane editor-pane">
+    <div class="pane-head">
+      <label for="samples">Workflow</label>
+      <select id="samples" aria-label="Load a sample workflow"></select>
+    </div>
+    <p id="sample-blurb" class="blurb"></p>
+    <textarea id="yaml" spellcheck="false" autocomplete="off" aria-label="Workflow YAML"></textarea>
+    <div class="editor-foot">
+      <span id="parse-status"></span>
+      <button id="share" type="button">Copy link to this scenario</button>
+    </div>
+  </section>
+
+  <section class="pane scenario-pane">
+    <div class="pane-head"><h2>Event</h2></div>
+    <div class="row">
+      <label>Event <select id="event"></select></label>
+      <label id="action-wrap">Activity type <select id="action"></select></label>
+    </div>
+    <div id="knobs" class="knobs"></div>
+    <div class="row">
+      <label>Repository <input id="repository" type="text" spellcheck="false"></label>
+      <label>Default branch <input id="default-branch" type="text" spellcheck="false"></label>
+      <label>Actor <input id="actor" type="text" spellcheck="false"></label>
+    </div>
+    <label class="check"><input id="cancelled" type="checkbox"> The run gets cancelled while jobs are pending</label>
+  </section>
+
+  <section class="pane results-pane">
+    <div id="trigger"></div>
+    <div id="problems"></div>
+    <div id="jobs"></div>
+    <details id="context-details">
+      <summary>github context this scenario produces</summary>
+      <div id="context"></div>
+    </details>
+  </section>
+</main>
+
+<section id="how" class="how">
+  <h2>How it works</h2>
+  <p>GitHub publishes the pieces of its own Actions language server as MIT-licensed npm packages: <code>@actions/workflow-parser</code> reads your YAML against the real workflow schema and fills in the same defaults the runner does (a job without <code>if:</code> gets <code>success()</code>), and <code>@actions/expressions</code> is the expression engine behind <code>${'{{'} }}</code>. This page runs both in your browser. The only parts written here are what the packages do not cover: the <code>on:</code> filter matching (branches, tags, paths, activity types), the derivation of the <code>github</code> context for each event, the job-status functions computed from the jobs a job needs, and a tracing evaluator that records the value of every sub-expression so a skipped job can tell you which comparison did it.</p>
+  <p>The event payload comes from GitHub's published webhook examples; the knobs above patch it (branch, labels, fork, draft, inputs), so every evaluation runs against a realistic <code>github.event</code>. The result is checked against ground truth: a private repository ran the same workflows on real pushes, pull requests, labels, tags, manual dispatches, a release and an issue; each run dumped its own <code>github</code> context, and the test suite requires this simulator to reproduce every job's run-or-skip decision and every trigger decision from those runs.</p>
+  <p><strong>Limits.</strong> Changed files are typed by you: GitHub strips the file lists from the push payload it hands to Actions, so no simulator can read them from the event. Reusable workflows are shown as jobs but not expanded. Matrix expansion is not simulated yet. Step conditions are evaluated with the job's context and every previous step assumed successful. <code>hashFiles()</code> in a step returns an empty string here. Secrets are never available in <code>if:</code>, on GitHub or here.</p>
+  <p class="foot">MIT · <a href="https://github.com/barbarkaragul-oss/why-didnt-my-job-run">source, fixtures and tests</a> · built with <a href="https://github.com/actions/languageservices">actions/languageservices</a> packages · no analytics, no server, no key.</p>
+</section>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

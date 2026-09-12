@@ -5,6 +5,7 @@
  * same code GitHub ships in its language server.
  */
 import { parseWorkflow, convertWorkflowTemplate, NoOperationTraceWriter } from '@actions/workflow-parser';
+import { ErrorPolicy } from '@actions/workflow-parser/model/convert';
 import type { WorkflowTemplate, WorkflowJob, Step } from '@actions/workflow-parser/model/workflow-template';
 import type { TemplateToken } from '@actions/workflow-parser/templates/tokens/template-token';
 
@@ -50,7 +51,8 @@ export async function parseWorkflowFile(content: string, fileName = 'workflow.ym
   if (!result.value) return { name: undefined, events: {}, jobs: [], errors: errors.length ? errors : ['The file could not be parsed as a workflow.'] };
   let template: WorkflowTemplate;
   try {
-    template = await convertWorkflowTemplate(result.context, result.value);
+    // TryConversion: keep whatever converted so the UI can still show jobs next to the errors.
+    template = await convertWorkflowTemplate(result.context, result.value, undefined, { errorPolicy: ErrorPolicy.TryConversion });
   } catch (e) {
     return { name: undefined, events: {}, jobs: [], errors: [...errors, (e as Error).message] };
   }
@@ -58,7 +60,7 @@ export async function parseWorkflowFile(content: string, fileName = 'workflow.ym
   return {
     name: readName(content),
     events: template.events ?? {},
-    jobs: template.jobs.map(toJob),
+    jobs: (template.jobs ?? []).map(toJob),
     errors: [...new Set(errors)],
   };
 }

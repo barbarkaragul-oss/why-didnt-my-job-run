@@ -36,30 +36,46 @@ export interface TriggerInput {
   changedFiles?: string[];
 }
 
-/** Default activity types when `types:` is omitted (docs, "Events that trigger workflows"). */
+/**
+ * Default activity types when `types:` is omitted. Docs: pull_request and pull_request_target
+ * default to opened, synchronize and reopened; for every other event "all activity types trigger
+ * workflows that run on this event", so any activity type passes.
+ */
 export const DEFAULT_TYPES: Record<string, string[]> = {
   pull_request: ['opened', 'synchronize', 'reopened'],
   pull_request_target: ['opened', 'synchronize', 'reopened'],
-  issues: ['opened', 'edited', 'deleted', 'transferred', 'pinned', 'unpinned', 'closed', 'reopened', 'assigned', 'unassigned', 'labeled', 'unlabeled', 'locked', 'unlocked', 'milestoned', 'demilestoned', 'typed', 'untyped'],
-  issue_comment: ['created', 'edited', 'deleted'],
-  release: ['published', 'unpublished', 'created', 'edited', 'deleted', 'prereleased', 'released'],
-  pull_request_review: ['submitted', 'edited', 'dismissed'],
-  pull_request_review_comment: ['created', 'edited', 'deleted'],
-  workflow_run: ['requested', 'completed', 'in_progress'],
-  discussion: ['created', 'edited', 'deleted', 'transferred', 'pinned', 'unpinned', 'labeled', 'unlabeled', 'locked', 'unlocked', 'category_changed', 'answered', 'unanswered'],
-  discussion_comment: ['created', 'edited', 'deleted'],
-  label: ['created', 'edited', 'deleted'],
-  milestone: ['created', 'closed', 'opened', 'edited', 'deleted'],
-  check_run: ['created', 'rerequested', 'completed', 'requested_action'],
-  check_suite: ['completed'],
-  merge_group: ['checks_requested'],
-  registry_package: ['published', 'updated'],
-  branch_protection_rule: ['created', 'edited', 'deleted'],
-  project: ['created', 'closed', 'reopened', 'edited', 'deleted'],
-  project_card: ['created', 'moved', 'converted', 'edited', 'deleted'],
-  project_column: ['created', 'updated', 'moved', 'deleted'],
-  watch: ['started'],
 };
+
+/** Events whose workflow file must exist on the default branch to trigger at all (docs note on each event). */
+export const DEFAULT_BRANCH_ONLY = new Set(['branch_protection_rule', 'check_run', 'check_suite', 'delete', 'discussion', 'discussion_comment', 'fork', 'gollum', 'issue_comment', 'issues', 'label', 'milestone', 'page_build', 'public', 'registry_package', 'repository_dispatch', 'schedule', 'status', 'watch', 'workflow_dispatch', 'workflow_run']);
+
+/** Documented filter keys per event; anything else is not a documented filter and is reported. */
+export const FILTERS_BY_EVENT: Record<string, string[]> = {
+  push: ['branches', 'branches-ignore', 'tags', 'tags-ignore', 'paths', 'paths-ignore'],
+  pull_request: ['branches', 'branches-ignore', 'paths', 'paths-ignore', 'types'],
+  pull_request_target: ['branches', 'branches-ignore', 'paths', 'paths-ignore', 'types'],
+  workflow_run: ['branches', 'branches-ignore', 'workflows', 'types'],
+};
+
+/** Static problems in an `on:` block that make GitHub reject or misread the workflow. */
+export function validateTriggers(workflow: ParsedWorkflow): string[] {
+  const problems: string[] = [];
+  for (const [event, raw] of Object.entries(workflow.events as Record<string, unknown>)) {
+    const cfg = (raw ?? {}) as Record<string, unknown>;
+    for (const [a, b] of [['branches', 'branches-ignore'], ['tags', 'tags-ignore'], ['paths', 'paths-ignore']] as const) {
+      if (cfg[a] !== undefined && cfg[b] !== undefined) problems.push(`on.${event}: ${a} and ${b} cannot both be used for the same event (docs: workflow syntax).`);
+    }
+    for (const key of ['branches', 'tags', 'paths'] as const) {
+      const list = asStrings(cfg[key]);
+      if (list.length && list.every((p) => p.startsWith('!'))) problems.push(`on.${event}.${key}: a list with only negative patterns is not allowed; add at least one pattern without ! or use ${key}-ignore.`);
+    }
+    const allowed = FILTERS_BY_EVENT[event];
+    for (const key of Object.keys(cfg)) {
+      if (['branches', 'branches-ignore', 'tags', 'tags-ignore', 'paths', 'paths-ignore'].includes(key) && !(allowed ?? []).includes(key)) problems.push(`on.${event}.${key}: this filter is not documented for ${event}; GitHub ignores it or rejects the file.`);
+    }
+  }
+  return problems;
+}
 
 /** Compile one GitHub filter pattern into an anchored RegExp. */
 export function compilePattern(pattern: string): RegExp {
@@ -76,9 +92,14 @@ export function compilePattern(pattern: string): RegExp {
     }
     if (c === '*') {
       if (next === '*') {
+        if (src[i + 2] === '/') {
+          // "**/" means any number of directories including none: '**/README.md' matches 'README.md'
+          re += '(?:.*/)?';
+          i += 3;
+          continue;
+        }
         re += '.*';
         i += 2;
-        // "**/" followed by more: any directory prefix including none
         continue;
       }
       re += '[^/]*';
@@ -183,10 +204,12 @@ export function decideTrigger(workflow: ParsedWorkflow, input: TriggerInput): Fi
   if (input.action && (types.length || defaults)) {
     const allowed = types.length ? types : defaults ?? [];
     if (!allowed.includes(input.action)) {
-      reasons.push(`activity type "${input.action}" is not in ${types.length ? 'types: [' + allowed.join(', ') + ']' : 'the default types (' + allowed.join(', ') + ')'}.`);
+      reasons.push(`activity type "${input.action}" is not in ${types.length ? 'types: [' + allowed.join(', ') + ']' : 'the default types (' + allowed.join(', ') + '); other types need an explicit types: list'}.`);
       return { matched: false, reasons };
     }
     reasons.push(`activity type "${input.action}" is ${types.length ? 'listed in types' : 'one of the default types'}.`);
+  } else if (input.action) {
+    reasons.push(`activity type "${input.action}": types is omitted, and for ${input.event} every activity type triggers the workflow by default.`);
   }
 
   // Branch / tag filters

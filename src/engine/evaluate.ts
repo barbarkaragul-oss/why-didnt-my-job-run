@@ -137,7 +137,8 @@ export function exprText(n: Expr): string {
   if (n instanceof ContextAccess) return n.name.lexeme;
   if (n instanceof IndexAccess) {
     const idx = n.index;
-    if (idx instanceof Literal && idx.token.type === 18 /* STRING */ && /^[A-Za-z_][\w-]*$/.test(String(idx.literal.coerceString()))) return `${exprText(n.expr)}.${idx.literal.coerceString()}`;
+    // dot access is parsed as an index with a literal key (`github.ref` -> github['ref'])
+    if (idx instanceof Literal && idx.literal.kind === data.Kind.String && /^[A-Za-z_][\w-]*$/.test(idx.literal.coerceString())) return `${exprText(n.expr)}.${idx.literal.coerceString()}`;
     if (idx.constructor.name === 'Star') return `${exprText(n.expr)}.*`;
     return `${exprText(n.expr)}[${exprText(idx)}]`;
   }
@@ -150,30 +151,44 @@ export function exprText(n: Expr): string {
 }
 
 /**
- * Finds the decisive sub-expression: for a false `&&` chain the first false operand, for a true
- * `||` chain the first true operand, descending into groupings, and phrases it.
+ * Finds the decisive sub-expression and phrases it. For a false `&&` chain that is the first false
+ * operand; for a true `||` chain the first true operand; for a true `&&` chain the last operand that
+ * is not a bare status function (so `success() && (x == y)` explains `x == y`). Comparisons are
+ * phrased with both sides' values, and a note is added when GitHub's loose equality coerced types.
  */
 function explain(root: Expr, trace: Array<{ node: Expr; value: data.ExpressionData }>, truthy: boolean): string {
   const valueOf = (n: Expr) => trace.find((t) => t.node === n)?.value;
+  const isStatusCall = (n: Expr) => n instanceof FunctionCall && ['success', 'failure', 'cancelled', 'always'].includes(n.functionName.lexeme.toLowerCase());
   let node: Expr = root;
   for (let guard = 0; guard < 50; guard++) {
     if (node instanceof Grouping) { node = node.group; continue; }
     if (node instanceof Logical) {
-      const wantFalse = node.operator.lexeme === '&&' && !truthy;
-      const wantTrue = node.operator.lexeme === '||' && truthy;
-      if (wantFalse || wantTrue) {
-        const hit = node.args.find((a) => { const v = valueOf(a); return v ? isTruthy(v) === wantTrue : false; });
-        if (hit) { node = hit; continue; }
-      }
+      const and = node.operator.lexeme === '&&';
+      let hit: Expr | undefined;
+      if (and && !truthy) hit = node.args.find((a) => { const v = valueOf(a); return v ? !isTruthy(v) : false; });
+      else if (!and && truthy) hit = node.args.find((a) => { const v = valueOf(a); return v ? isTruthy(v) : false; });
+      else if (and && truthy) hit = [...node.args].reverse().find((a) => !isStatusCall(a)) ?? node.args[node.args.length - 1];
+      if (hit && hit !== node) { node = hit; continue; }
     }
     break;
   }
   const v = valueOf(node);
   const text = exprText(node);
-  if (node === root) return truthy ? `${text} is ${v ? displayValue(v) : 'true'}` : `${text} is ${v ? displayValue(v) : 'false'}`;
+  const shown = v ? displayValue(v) : truthy ? 'true' : 'false';
   if (node instanceof Binary && v) {
+    const sides = [node.left, node.right].filter((s) => !(s instanceof Literal)).map((s) => { const sv = valueOf(s); return `${exprText(s)} is ${sv ? displayValue(sv) : '?'}`; });
     const l = valueOf(node.left); const r = valueOf(node.right);
-    return `${exprText(node.left)} is ${l ? displayValue(l) : '?'}, ${exprText(node.right)} is ${r ? displayValue(r) : '?'} → ${text} is ${displayValue(v)}`;
+    let hint = '';
+    if (l && r && (node.operator.lexeme === '==' || node.operator.lexeme === '!=') && l.kind !== r.kind) {
+      hint = ` (loose equality: ${kindStr(l.kind).toLowerCase()} and ${kindStr(r.kind).toLowerCase()} are compared as numbers, null/false/'' count as 0)`;
+    } else if (l && r && l.kind === data.Kind.String && r.kind === data.Kind.String && (node.operator.lexeme === '==' || node.operator.lexeme === '!=') && l.coerceString() !== r.coerceString() && l.coerceString().toLowerCase() === r.coerceString().toLowerCase()) {
+      hint = ' (string comparison is case-insensitive)';
+    }
+    return `${sides.join(', ')}${sides.length ? ' → ' : ''}${text} is ${displayValue(v)}${hint}`;
   }
-  return `${text} is ${v ? displayValue(v) : (truthy ? 'true' : 'false')}`;
+  if (node instanceof FunctionCall && v && node.functionName.lexeme.toLowerCase() === 'contains' && node.args.length === 2) {
+    const a = valueOf(node.args[0]!);
+    return `${exprText(node.args[0]!)} is ${a ? displayValue(a) : '?'} → ${text} is ${displayValue(v)}`;
+  }
+  return `${text} is ${shown}`;
 }
