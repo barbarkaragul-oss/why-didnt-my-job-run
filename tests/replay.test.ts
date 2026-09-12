@@ -11,6 +11,8 @@ import path from 'node:path';
 import { parseWorkflowFile, type ParsedWorkflow } from '../src/engine/workflow.js';
 import { evaluateCondition, type JobResult } from '../src/engine/evaluate.js';
 import { decideTrigger } from '../src/engine/filters.js';
+import { simulate } from '../src/engine/simulate.js';
+import { DEFAULT_STATE, toEngineInputs, type ScenarioState } from '../src/ui/scenario.js';
 
 interface Fixture {
   run_id: number;
@@ -131,3 +133,22 @@ for (const fx of prRuns.filter((f) => f.workflow === 'fixture-a' && f.github)) {
     assert.deepEqual(mismatches, []);
   });
 }
+
+// fixture-hashfiles has a job-level hashFiles(). GitHub refused the file on every push: each recording is a run
+// with conclusion "failure" and an empty job list, named after the file path. The simulator must say the same.
+test('replay fixture-hashfiles: a rejected file is a failed run with no jobs, on every push', async () => {
+  const runs = fixtures.filter((f) => f.workflow === 'fixture-hashfiles');
+  assert.ok(runs.length >= 5, `expected the hashFiles runs to be recorded, got ${runs.length}`);
+  const wf = await loadWorkflow('fixture-hashfiles');
+  assert.ok(wf.errors.some((e) => /hashFiles/.test(e)), JSON.stringify(wf.errors));
+  for (const fx of runs) {
+    assert.equal(fx.conclusion, 'failure', `run ${fx.run_id}`);
+    assert.deepEqual(fx.jobs, [], `run ${fx.run_id}`);
+    const state: ScenarioState = { ...DEFAULT_STATE, event: 'push', refType: 'branch', branch: fx.head_branch ?? 'main' };
+    const inputs = toEngineInputs(state, wf);
+    const sim = simulate({ workflow: wf, github: inputs.github, inputs: inputs.inputs, trigger: inputs.trigger });
+    assert.equal(sim.rejected, true, `run ${fx.run_id}`);
+    assert.ok(sim.jobs.length > 0);
+    assert.deepEqual(sim.jobs.map((j) => j.outcome), sim.jobs.map(() => 'rejected'), `run ${fx.run_id}`);
+  }
+});

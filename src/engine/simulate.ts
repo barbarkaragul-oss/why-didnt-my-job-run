@@ -9,7 +9,8 @@ import { evaluateCondition, parseExpression, statusFunctions, type EvaluationRes
 import { checkAvailability, type AvailabilityProblem } from './availability.js';
 import type { Json } from './context.js';
 
-export type JobOutcome = 'runs' | 'skipped' | 'fails' | 'cancelled' | 'blocked';
+/** 'blocked': the event does not start the workflow. 'rejected': GitHub refuses the file, so no job exists. */
+export type JobOutcome = 'runs' | 'skipped' | 'fails' | 'cancelled' | 'blocked' | 'rejected';
 
 export interface JobVerdict {
   job: ParsedJob;
@@ -50,6 +51,11 @@ export interface Simulation {
   jobs: JobVerdict[];
   /** Jobs whose needs reference unknown jobs or form a cycle. */
   graphProblems: string[];
+  /**
+   * True when GitHub refuses the file (a parse error, an invalid on: block, a broken needs graph). Verified with
+   * real runs: GitHub then creates a failed run named after the file path, with no jobs at all.
+   */
+  rejected: boolean;
 }
 
 export function simulate(input: SimulationInput): Simulation {
@@ -63,6 +69,7 @@ export function simulate(input: SimulationInput): Simulation {
 
   const fileProblems = [...workflow.errors, ...validateTriggers(workflow)];
   const { order, graphProblems } = topoOrder(workflow.jobs);
+  const rejected = fileProblems.length > 0 || graphProblems.length > 0;
 
   const results = new Map<string, JobResult>();
   const verdicts = new Map<string, JobVerdict>();
@@ -74,7 +81,11 @@ export function simulate(input: SimulationInput): Simulation {
     let outcome: JobOutcome;
     let result: JobResult;
     let headline: string;
-    if (!trigger.matched) {
+    if (rejected) {
+      outcome = 'rejected';
+      result = 'skipped';
+      headline = 'Not run: GitHub rejects this workflow file, so the run fails before any job starts.';
+    } else if (!trigger.matched) {
       outcome = 'blocked';
       result = 'skipped';
       headline = 'The workflow does not run for this event, so no job runs.';
@@ -102,7 +113,7 @@ export function simulate(input: SimulationInput): Simulation {
     }));
     verdicts.set(job.id, { job, outcome, result, evaluation, headline, needsResults, problems, stepVerdicts });
   }
-  return { trigger, triggerNotes, fileProblems, jobs: order.map((j) => verdicts.get(j.id)!), graphProblems };
+  return { trigger, triggerNotes, fileProblems, jobs: order.map((j) => verdicts.get(j.id)!), graphProblems, rejected };
 }
 
 function availabilityFor(expression: string, key: 'jobs.<job_id>.if' | 'jobs.<job_id>.steps.if', needs: Record<string, JobResult>): AvailabilityProblem[] {

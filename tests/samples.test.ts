@@ -91,10 +91,13 @@ test('paths-filter: a docs-only push does not trigger; adding a source file does
   assert.equal(prSrc.sim.trigger.matched, true);
 });
 
-test('hashfiles-job-if: the job-level hashFiles is reported as something GitHub rejects; the step-level one is fine', async () => {
+test('hashfiles-job-if: the job-level hashFiles is reported as something GitHub rejects and no job runs; the step-level one is fine', async () => {
   const r = await run('hashfiles-job-if');
   // GitHub's own parser reports it ("Unrecognized function: 'hashFiles'") and drops the condition, exactly like GitHub
   assert.ok(r.sim.fileProblems.some((p) => /hashFiles/.test(p)), JSON.stringify(r.sim.fileProblems));
+  assert.equal(r.sim.rejected, true);
+  assert.deepEqual(r.outcome, { 'needs-lockfile': 'rejected', fine: 'rejected' });
+  assert.match(r.reason['fine']!, /GitHub rejects this workflow file/);
   const fine = r.sim.jobs.find((j) => j.job.id === 'fine')!;
   assert.deepEqual(fine.problems, []);
   assert.deepEqual(fine.stepVerdicts.flatMap((s) => s.problems), []);

@@ -54,6 +54,7 @@ label.check { display: flex; align-items: center; gap: 8px; color: var(--text); 
 .pill.fails { background: var(--fail-bg); color: var(--fail-fg); }
 .pill.cancelled { background: var(--warn-bg); color: var(--warn-fg); }
 .pill.blocked { background: var(--blocked-bg); color: var(--blocked-fg); border: 1px dashed var(--border); }
+.pill.rejected { background: var(--fail-bg); color: var(--fail-fg); border: 1px dashed var(--fail-fg); }
 .pill.yes { background: var(--run-bg); color: var(--run-fg); }
 .pill.no { background: var(--fail-bg); color: var(--fail-fg); }
 .trigger { border-left: 4px solid var(--run-fg); }

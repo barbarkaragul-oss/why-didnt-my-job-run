@@ -229,7 +229,8 @@ function render(github: Record<string, unknown>, notes: string[]) {
   const problems = $('problems');
   problems.replaceChildren(
     ...sim.fileProblems.map((p) => h('div', { class: 'problem' }, h('strong', { text: 'GitHub rejects this file: ' }), p)),
-    ...sim.graphProblems.map((p) => h('div', { class: 'problem', text: p })),
+    ...sim.graphProblems.map((p) => h('div', { class: 'problem' }, h('strong', { text: 'GitHub rejects this file: ' }), p)),
+    ...(sim.rejected ? [h('div', { class: 'note', text: 'A rejected file produces a failed run named after the file path, with no jobs. Nothing below runs until the file is fixed.' })] : []),
   );
 
   const jobs = $('jobs');
@@ -259,6 +260,11 @@ function renderJob(v: JobVerdict): HTMLElement {
     title.append(h('span', { class: 'force' }, 'ends with', sel));
   }
   card.append(title);
+  if (v.outcome === 'rejected') {
+    // The parser may have dropped the very condition it rejected, so showing the if: line here would mislead.
+    card.append(h('p', { class: 'reason', text: v.headline }));
+    return card;
+  }
   if (job.needs.length) {
     card.append(h('div', { class: 'needs' }, 'needs: ', ...job.needs.map((n) => h('span', { class: 'chip', text: `${n} → ${v.needsResults[n] ?? '?'}` }))));
   }
