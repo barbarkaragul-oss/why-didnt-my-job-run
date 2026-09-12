@@ -1,12 +1,13 @@
 /**
- * Records ground truth from the private fixtures repository (barbarkaragul-oss/wdmjr-fixtures):
+ * Records ground truth from the fixtures repository (barbarkaragul-oss/wdmjr-fixtures, public):
  * for every completed workflow run, the event, the real `github` context (dumped by the run
  * itself), and each job's conclusion. The simulator's tests replay these and must agree.
  *
  *   npx tsx scripts/record-fixtures.ts            # writes tests/fixtures/runs/*.json
  *
- * Needs a GitHub token with access to the fixtures repo: GITHUB_TOKEN env, or the token stored in
- * Git Credential Manager for github.com (read via `git credential fill`, never printed).
+ * Needs a GitHub token (job logs are only served to authenticated requests): GITHUB_TOKEN env, or the
+ * token stored in Git Credential Manager for github.com (read via `git credential fill`, never printed).
+ * Point FIXTURES_REPO at your own copy of the workflows to record against it.
  */
 import { execSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readdirSync } from 'node:fs';

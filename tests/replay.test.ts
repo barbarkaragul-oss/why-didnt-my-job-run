@@ -1,6 +1,6 @@
 /**
  * Ground-truth replay: every fixture in tests/fixtures/runs was recorded from a real run in the
- * private fixtures repository (the run dumped its own `github` context; the API reported each
+ * fixtures repository (github.com/barbarkaragul-oss/wdmjr-fixtures, public) (the run dumped its own `github` context; the API reported each
  * job's conclusion). The simulator must reproduce, for every job, whether GitHub ran or skipped it,
  * and for every push, which workflows GitHub started.
  */
