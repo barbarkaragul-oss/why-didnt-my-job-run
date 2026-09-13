@@ -1,0 +1,113 @@
+name: Weekly upstream check
+
+# This page is only as correct as the two packages it borrows from GitHub: @actions/workflow-parser
+# parses the file and @actions/expressions evaluates `${{ }}`. When GitHub ships a new version, the
+# behaviour this page reports can change without anything here changing. Once a week we therefore:
+#   1. replay every recorded run against the CURRENTLY PINNED packages (the same tests CI runs), and
+#   2. replay them again against the LATEST published packages.
+# If the latest ones still reproduce all 698 job decisions, the workflow just says so. If they do not,
+# or if a newer version exists at all, it opens (or updates) one issue so a human looks before upgrading.
+# Nothing is committed and no version is bumped automatically: an upgrade that changes a verdict has to
+# be read by a person.
+
+on:
+  schedule:
+    - cron: '23 6 * * 1'   # Mondays 06:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: weekly-upstream
+  cancel-in-progress: false
+
+jobs:
+  upstream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Replay the recordings against the pinned packages
+        run: npm test
+
+      - name: Compare pinned versions with the latest published ones
+        id: versions
+        run: |
+          status=ok
+          note=""
+          for pkg in @actions/workflow-parser @actions/expressions; do
+            pinned=$(node -p "require('./node_modules/$pkg/package.json').version")
+            latest=$(npm view "$pkg" version)
+            echo "$pkg: pinned $pinned, latest $latest"
+            if [ "$pinned" != "$latest" ]; then
+              status=behind
+              note="$note- \`$pkg\`: pinned **$pinned**, latest **$latest**"$'\n'
+            fi
+          done
+          {
+            echo "status=$status"
+            echo "note<<EOF"
+            printf '%s' "$note"
+            echo
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Replay the recordings against the latest packages
+        id: latest
+        if: steps.versions.outputs.status == 'behind'
+        continue-on-error: true
+        run: |
+          npm install --no-save @actions/workflow-parser@latest @actions/expressions@latest
+          npm test
+
+      - name: Describe the result
+        if: steps.versions.outputs.status == 'behind'
+        id: describe
+        run: |
+          if [ "${{ steps.latest.outcome }}" = "success" ]; then
+            echo "verdict=A newer version of GitHub's packages is out. Every recorded run still replays correctly against it, so upgrading looks safe." >> "$GITHUB_OUTPUT"
+          else
+            echo "verdict=A newer version of GitHub's packages is out and the recorded runs **no longer replay correctly** against it. Something GitHub changed alters a verdict this page reports. Do not upgrade before reading the failing test." >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write the issue body
+        if: steps.versions.outputs.status == 'behind'
+        run: |
+          {
+            echo "${{ steps.describe.outputs.verdict }}"
+            echo
+            echo "${{ steps.versions.outputs.note }}"
+            echo "Replay against latest: **${{ steps.latest.outcome }}**"
+            echo
+            echo "[Run log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+            echo
+            echo "_Opened by the weekly upstream check. Nothing was upgraded or committed._"
+          } > upstream-report.md
+          cat upstream-report.md
+
+      - name: Find the open upstream issue, if any
+        if: steps.versions.outputs.status == 'behind'
+        id: issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NUMBER=$(gh issue list --label upstream-packages --state open --limit 1 --json number --jq '.[0].number // ""')
+          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Existing issue: ${NUMBER:-none}"
+
+      - name: Open or update the issue
+        if: steps.versions.outputs.status == 'behind'
+        uses: peter-evans/create-issue-from-file@v6
+        with:
+          issue-number: ${{ steps.issue.outputs.number }}
+          title: "GitHub's parser packages have a newer version"
+          content-filepath: upstream-report.md
+          labels: upstream-packages
