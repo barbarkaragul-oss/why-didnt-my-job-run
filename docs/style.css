@@ -25,6 +25,10 @@ h1 { margin: 0 0 4px; font-size: 24px; }
 .tagline { margin: 0; color: var(--muted); max-width: 820px; }
 .links { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
 .links a, .links button { border: 1px solid var(--border); background: var(--panel); color: var(--text); padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 13px; cursor: pointer; }
+/* The one call to action on the page: a plain link, no third-party button, no tracking iframe. */
+.links a.star { border-color: var(--accent); color: var(--accent); }
+.links a.star:hover { background: var(--accent); color: var(--panel); }
+.links a.star .glyph { margin-right: 4px; }
 .layout { display: grid; grid-template-columns: minmax(320px, 1.1fr) minmax(280px, 0.8fr) minmax(360px, 1.3fr); gap: 16px; padding: 12px 24px 24px; max-width: 1500px; margin: 0 auto; }
 @media (max-width: 1100px) { .layout { grid-template-columns: 1fr 1fr; } .results-pane { grid-column: 1 / -1; } }
 @media (max-width: 720px) { .layout { grid-template-columns: 1fr; padding: 12px; } .top { flex-direction: column; padding: 16px 12px 4px; } }
