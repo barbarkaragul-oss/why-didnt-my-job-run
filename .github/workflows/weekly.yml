@@ -12,7 +12,11 @@ name: Weekly upstream check
 
 on:
   schedule:
-    - cron: '23 6 * * 1'   # Mondays 06:23 UTC
+    # GitHub queues scheduled workflows and drops them to the back of the line at busy times;
+    # the top of the hour is the worst, and '0 6 * * 1' is one of the most common crons there is.
+    # On 2026-09-14 all four of these repos missed their slot by more than three hours, so the
+    # times were moved to odd minutes, spread apart so they do not queue behind each other either.
+    - cron: '29 8 * * 1'   # Mondays 08:29 UTC
   workflow_dispatch:
 
 permissions:
