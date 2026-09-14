@@ -12,10 +12,13 @@ name: Weekly upstream check
 
 on:
   schedule:
-    # GitHub queues scheduled workflows and drops them to the back of the line at busy times;
-    # the top of the hour is the worst, and '0 6 * * 1' is one of the most common crons there is.
-    # On 2026-09-14 all four of these repos missed their slot by more than three hours, so the
-    # times were moved to odd minutes, spread apart so they do not queue behind each other either.
+    # GitHub's documentation says a scheduled run can be delayed when Actions is busy and, under
+    # enough load, dropped altogether: no run appears, and nothing anywhere records that one was
+    # skipped. On 2026-09-14 the first scheduled slot for this workflow produced no run at all,
+    # so the time was moved off the top of the hour in case congestion was the reason. That is a
+    # guess and not a diagnosis. What does not rest on the guess: a cron on our own server asks
+    # GitHub every day whether this workflow has run in the last seven days and dispatches it if
+    # it has not, so the weekly claim on the page holds whether or not this schedule fires.
     - cron: '29 8 * * 1'   # Mondays 08:29 UTC
   workflow_dispatch:
 
