@@ -98,3 +98,21 @@ pre.json { max-height: 320px; overflow: auto; font-size: 12px; background: var(-
 .upstream { margin: 6px 0 0; padding: 0 0 0 16px; font-size: 12.5px; }
 .upstream li { padding: 2px 0; }
 .upstream code { font-size: 12px; }
+/* A matrix that came out empty: GitHub creates no job, yet the jobs that need it see failure. */
+.pill.not-created { background: transparent; color: var(--fail-fg); border: 1px dashed var(--fail-fg); }
+.matrix { margin-top: 6px; }
+ul.combos { list-style: none; margin: 6px 0 0; padding: 0; font-size: 12.5px; }
+ul.combos > li { border-top: 1px dashed var(--border); padding: 5px 0; }
+.combo-head { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+.combo-head .mono { word-break: break-word; }
+.combo .note, .combo > .muted { margin: 4px 0 0; font-size: 12px; }
+.combo details { margin-top: 2px; }
+.combo code.expr { font-size: 12px; }
+.outputs:empty { display: none; }
+.outputs { border-top: 1px solid var(--border); margin: 4px 0 8px; padding-top: 6px; }
+.outputs h3 { font-size: 13px; margin: 2px 0 2px; }
+.outputs p { margin: 0 0 6px; font-size: 12.5px; }
+.outputs .output { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-size: 12.5px; min-width: 0; }
+.outputs .output input { font-family: var(--mono); }
+.outputs .choices { display: flex; flex-wrap: wrap; gap: 4px; }
+.outputs .choices button { font-family: var(--mono); font-size: 12px; padding: 2px 8px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

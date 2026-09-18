@@ -17,6 +17,8 @@ export interface ParsedStep {
   kind: 'run' | 'uses' | 'other';
   summary: string;
   line: number | undefined;
+  /** The whole `run:` script as written (a matrix reads job outputs; the page looks here for an example value). */
+  run?: string;
 }
 
 export interface ParsedJob {
@@ -28,8 +30,10 @@ export interface ParsedJob {
   /** The condition as written in the file (inside `${{ }}` or bare), or undefined when omitted. */
   ifSource: string | undefined;
   line: number | undefined;
-  /** Raw strategy token (matrix), kept for later expansion; undefined when the job has none. */
+  /** Raw strategy token (matrix), expanded by matrix.ts; undefined when the job has none. */
   strategy: TemplateToken | undefined;
+  /** `outputs:` as written, name -> value (`${{ steps.x.outputs.y }}` stays text); undefined when the job has none. */
+  outputs?: Record<string, string>;
   runsOn: string | undefined;
   reusable: boolean;
   steps: ParsedStep[];
@@ -79,6 +83,7 @@ function toJob(job: WorkflowJob): ParsedJob {
     ifSource,
     line: job.id.line,
     strategy: job.strategy,
+    outputs: job.outputs ? Object.fromEntries([...job.outputs].map((p) => [tokenText(p.key), sourceText(p.value)])) : undefined,
     runsOn,
     reusable: job.type === 'reusableWorkflowJob',
     steps,
@@ -88,7 +93,9 @@ function toJob(job: WorkflowJob): ParsedJob {
 function toStep(step: Step, index: number): ParsedStep {
   const anyStep = step as unknown as Record<string, unknown>;
   const kind: ParsedStep['kind'] = 'run' in anyStep ? 'run' : 'uses' in anyStep ? 'uses' : 'other';
-  const summary = kind === 'run' ? tokenText(anyStep['run'] as TemplateToken).split('\n')[0] ?? '' : kind === 'uses' ? tokenText(anyStep['uses'] as TemplateToken) : Object.keys(anyStep).filter((k) => !['id', 'name', 'if', 'continue-on-error'].includes(k)).join(', ');
+  // A run script with ${{ }} in it is a format() call to the parser; the summary shows the script as written.
+  const runSource = kind === 'run' ? sourceText(anyStep['run'] as TemplateToken) : '';
+  const summary = kind === 'run' ? (runSource !== tokenText(anyStep['run'] as TemplateToken) ? runSource.split('\n').map((l) => l.trim()).find(Boolean) ?? '' : runSource.split('\n')[0] ?? '') : kind === 'uses' ? tokenText(anyStep['uses'] as TemplateToken) : Object.keys(anyStep).filter((k) => !['id', 'name', 'if', 'continue-on-error'].includes(k)).join(', ');
   const ifToken = (anyStep['if'] as { expression?: string; line?: number } | undefined);
   return {
     id: step.id || `step-${index + 1}`,
@@ -97,7 +104,14 @@ function toStep(step: Step, index: number): ParsedStep {
     kind,
     summary,
     line: ifToken?.line,
+    run: kind === 'run' ? runSource : undefined,
   };
+}
+
+/** The text as written in the file: a string that mixes text and `${{ }}` keeps its source, not the format() call it became. */
+function sourceText(token: TemplateToken): string {
+  const t = token as unknown as { expression?: unknown; source?: unknown };
+  return typeof t.expression === 'string' && typeof t.source === 'string' ? t.source : tokenText(token);
 }
 
 function tokenText(token: TemplateToken | undefined): string {

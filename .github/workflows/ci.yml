@@ -24,12 +24,13 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
-      - name: Build the site
-        run: npm run build
-      - name: Built site must be committed
+      - name: Build the site and the command line bundle
+        run: npm run bundle
+      # Both are committed: Pages serves docs/, and `npx github:...` runs dist/cli.js without building anything.
+      - name: Built files must be committed
         run: |
-          if ! git diff --quiet -- docs/; then
-            echo "docs/ is out of date. Run 'npm run build' and commit the result." >&2
-            git --no-pager diff --stat -- docs/
+          if [ -n "$(git status --porcelain -- docs/ dist/)" ]; then
+            echo "docs/ or dist/ is out of date. Run 'npm run bundle' and commit the result." >&2
+            git status --short -- docs/ dist/
             exit 1
           fi

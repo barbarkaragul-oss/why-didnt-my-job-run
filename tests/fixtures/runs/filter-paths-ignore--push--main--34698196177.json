@@ -1,0 +1,38 @@
+{
+  "recorded_at": "2026-09-18T09:29:38.459Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34698196177,
+  "workflow": "filter-paths-ignore",
+  "workflow_path": ".github/workflows/filter-paths-ignore.yml",
+  "event": "push",
+  "head_branch": "main",
+  "head_sha": "3da0ce41c0dbc3d175dade11efe52f48c7de554a",
+  "conclusion": "success",
+  "display_title": "Strip the job token from the context dump; README and license for goi…",
+  "changed_files": [
+    ".github/workflows/filter-branches.yml",
+    ".github/workflows/fixture-a.yml",
+    "LICENSE",
+    "README.md"
+  ],
+  "jobs": [
+    {
+      "name": "ran",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"ref refs/heads/main\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

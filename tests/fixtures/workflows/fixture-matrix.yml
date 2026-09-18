@@ -1,0 +1,192 @@
+name: fixture-matrix
+# Ground truth for matrix expansion: which combinations GitHub creates, how include and exclude and
+# fromJSON shape them, what an empty matrix does to the job and to the jobs that need it, and what
+# fail-fast does to the other combinations. Dispatched by hand, so a push to this repository does
+# not start it.
+on:
+  workflow_dispatch:
+
+jobs:
+  context:
+    runs-on: ubuntu-latest
+    env:
+      WDMJR_GITHUB: ${{ toJSON(github) }}
+      WDMJR_INPUTS: ${{ toJSON(inputs) }}
+    steps:
+      - run: |
+          echo "::WDMJR_GITHUB_START::"
+          echo "$WDMJR_GITHUB" | jq -c 'del(.token)' | base64 -w0
+          echo
+          echo "::WDMJR_GITHUB_END::"
+          echo "::WDMJR_INPUTS_START::"
+          echo "$WDMJR_INPUTS" | base64 -w0
+          echo
+          echo "::WDMJR_INPUTS_END::"
+
+  # the cross product, and a step whose condition reads two matrix values
+  plain:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, mac]
+        node: [20, 22]
+    steps:
+      - run: echo "${{ matrix.os }} ${{ matrix.node }}"
+      - name: only linux 22
+        if: matrix.os == 'linux' && matrix.node == 22
+        run: echo linux-22
+
+  # exclude removes a combination; include adds a key to the combinations it matches, adds a key to
+  # every combination when none of its keys is in the matrix, and adds new combinations
+  include_exclude:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        fruit: [apple, pear]
+        animal: [cat, dog]
+        exclude:
+          - fruit: pear
+            animal: dog
+        include:
+          - color: green
+          - fruit: apple
+            shape: circle
+          - fruit: banana
+          - fruit: banana
+            animal: cat
+    steps:
+      - run: echo '${{ toJSON(matrix) }}'
+      - name: only circles
+        if: matrix.shape == 'circle'
+        run: echo circle
+
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      some: ${{ steps.p.outputs.some }}
+      none: ${{ steps.p.outputs.none }}
+      whole: ${{ steps.p.outputs.whole }}
+      whole_empty: ${{ steps.p.outputs.whole_empty }}
+    steps:
+      - id: p
+        run: |
+          echo 'some=["a","b"]' >> "$GITHUB_OUTPUT"
+          echo 'none=[]' >> "$GITHUB_OUTPUT"
+          echo 'whole={"include":[{"x":"1"},{"x":"2"}]}' >> "$GITHUB_OUTPUT"
+          echo 'whole_empty={"include":[]}' >> "$GITHUB_OUTPUT"
+
+  # one key read from a job output
+  dynamic:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: ${{ fromJSON(needs.plan.outputs.some) }}
+    steps:
+      - run: echo "${{ matrix.target }}"
+
+  # the same, but the list is empty
+  dynamic_empty:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: ${{ fromJSON(needs.plan.outputs.none) }}
+    steps:
+      - run: echo "${{ matrix.target }}"
+
+  # the whole matrix read from a job output, the usual "one job per changed package" pattern
+  whole_json:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJSON(needs.plan.outputs.whole) }}
+    steps:
+      - run: echo "${{ matrix.x }}"
+
+  # the same pattern when nothing changed: an empty include list
+  whole_json_empty:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJSON(needs.plan.outputs.whole_empty) }}
+    steps:
+      - run: echo "${{ matrix.x }}"
+
+  after_dynamic_empty:
+    needs: dynamic_empty
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo never
+
+  after_dynamic_empty_always:
+    needs: dynamic_empty
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "dynamic_empty=${{ needs.dynamic_empty.result }}"
+
+  after_whole_json_empty:
+    needs: whole_json_empty
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo never
+
+  after_whole_json_empty_always:
+    needs: whole_json_empty
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "whole_json_empty=${{ needs.whole_json_empty.result }}"
+
+  # one combination fails; fail-fast is on by default and should cancel the others
+  failfast:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        n: [1, 2, 3]
+    steps:
+      - run: |
+          if [ "${{ matrix.n }}" = "2" ]; then exit 1; fi
+          sleep 45
+
+  nofailfast:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        n: [1, 2, 3]
+    steps:
+      - run: |
+          if [ "${{ matrix.n }}" = "2" ]; then exit 1; fi
+          sleep 10
+
+  after_failfast:
+    needs: failfast
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo never
+
+  after_failfast_always:
+    needs: failfast
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "failfast=${{ needs.failfast.result }}"
+
+  after_nofailfast_always:
+    needs: nofailfast
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "nofailfast=${{ needs.nofailfast.result }}"
+
+  # a matrix job whose own condition is false: is it one skipped job, or one per combination?
+  skipped_matrix:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        n: [1, 2]
+    steps:
+      - run: echo "${{ matrix.n }}"

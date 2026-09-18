@@ -14,7 +14,7 @@ async function run(sampleId: string, override: Partial<ScenarioState> = {}) {
   const state: ScenarioState = { ...DEFAULT_STATE, ...(sample.scenario as Partial<ScenarioState>), ...override };
   const workflow = await parseWorkflowFile(sample.yaml);
   const inputs = toEngineInputs(state, workflow);
-  const sim = simulate({ workflow, github: inputs.github, inputs: inputs.inputs, trigger: inputs.trigger, forcedResults: state.forcedResults, cancelled: state.cancelled });
+  const sim = simulate({ workflow, github: inputs.github, inputs: inputs.inputs, trigger: inputs.trigger, forcedResults: state.forcedResults, cancelled: state.cancelled, outputs: state.jobOutputs });
   const outcome = Object.fromEntries(sim.jobs.map((j) => [j.job.id, j.outcome]));
   const reason = Object.fromEntries(sim.jobs.map((j) => [j.job.id, j.headline]));
   return { workflow, sim, outcome, reason };
@@ -103,6 +103,27 @@ test('hashfiles-job-if: the job-level hashFiles is reported as something GitHub 
   const fine = r.sim.jobs.find((j) => j.job.id === 'fine')!;
   assert.deepEqual(fine.problems, []);
   assert.deepEqual(fine.stepVerdicts.flatMap((s) => s.problems), []);
+});
+
+test('matrix-empty: two packages make four test jobs; an empty list makes none, report is skipped and summary sees failure', async () => {
+  const two = await run('matrix-empty');
+  const test = two.sim.jobs.find((j) => j.job.id === 'test')!;
+  assert.deepEqual(test.matrix?.combinations.map((c) => [c.combination.name, c.combination.matrix]), [
+    ['test (api, 20)', { package: 'api', node: 20 }], ['test (api, 22)', { package: 'api', node: 22 }],
+    ['test (web, 20)', { package: 'web', node: 20, browser: true }], ['test (web, 22)', { package: 'web', node: 22, browser: true }],
+  ]);
+  // the browser step runs only where the include entry added browser: true
+  assert.deepEqual(test.matrix?.combinations.map((c) => c.stepVerdicts[1]!.evaluation?.ok && c.stepVerdicts[1]!.evaluation.truthy), [false, false, true, true]);
+  assert.deepEqual(two.outcome, { plan: 'runs', test: 'runs', report: 'runs', summary: 'runs' });
+  const empty = await run('matrix-empty', { jobOutputs: { plan: { packages: '[]' } } });
+  assert.deepEqual(empty.outcome, { plan: 'runs', test: 'not-created', report: 'skipped', summary: 'runs' });
+  assert.match(empty.reason['test']!, /No job created/);
+  assert.equal(empty.sim.jobs.find((j) => j.job.id === 'summary')!.needsResults['test'], 'failure');
+  const unknown = await run('matrix-empty', { jobOutputs: {} });
+  assert.equal(unknown.sim.jobs.find((j) => j.job.id === 'test')!.matrix?.expansion.kind, 'unknown');
+  // failing one combination: fail-fast cancels the other three
+  const failing = await run('matrix-empty', { forcedResults: { 'test.web_20': 'failure' } });
+  assert.deepEqual(failing.sim.jobs.find((j) => j.job.id === 'test')!.matrix?.combinations.map((c) => c.result), ['cancelled', 'cancelled', 'failure', 'cancelled']);
 });
 
 test('push: typed changed files do not leak into github.event (Actions payloads carry no file lists)', async () => {

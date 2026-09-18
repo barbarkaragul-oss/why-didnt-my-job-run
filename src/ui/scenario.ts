@@ -22,8 +22,11 @@ export interface ScenarioState {
   changedFiles: string;
   commitMessage: string;
   inputs: Record<string, string | boolean | number>;
+  /** Keys are job ids, or `<job id>.<configuration id>` for one matrix combination (e.g. failfast._2). */
   forcedResults: Record<string, JobResult>;
   cancelled: boolean;
+  /** Job outputs a matrix reads, job id -> output name -> value as typed. A missing value means unknown. */
+  jobOutputs?: Record<string, Record<string, string>>;
 }
 
 export const DEFAULT_STATE: ScenarioState = {
@@ -45,6 +48,7 @@ export const DEFAULT_STATE: ScenarioState = {
   inputs: {},
   forcedResults: {},
   cancelled: false,
+  jobOutputs: {},
 };
 
 export const PR_EVENTS = new Set(['pull_request', 'pull_request_target', 'pull_request_review', 'pull_request_review_comment']);

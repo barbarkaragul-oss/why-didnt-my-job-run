@@ -5,7 +5,7 @@ name: Weekly upstream check
 # behaviour this page reports can change without anything here changing. Once a week we therefore:
 #   1. replay every recorded run against the CURRENTLY PINNED packages (the same tests CI runs), and
 #   2. replay them again against the LATEST published packages.
-# If the latest ones still reproduce all 698 job decisions, the workflow just says so. If they do not,
+# If the latest ones still reproduce every recorded job decision, the workflow just says so. If they do not,
 # or if a newer version exists at all, it opens (or updates) one issue so a human looks before upgrading.
 # Nothing is committed and no version is bumped automatically: an upgrade that changes a verdict has to
 # be read by a person.

@@ -213,4 +213,52 @@ jobs:
 `,
     scenario: { event: 'push', branch: 'main' },
   },
+  {
+    id: 'matrix-empty',
+    title: 'A matrix from a job output, and the empty case',
+    blurb: 'plan lists the packages to test and the matrix reads that list. With two packages you get four test jobs; the include entry adds browser tests to the web ones. Now pick [] (empty) under Job outputs: GitHub creates no test job at all, says nothing about it, report is skipped and summary sees failure.',
+    yaml: `name: Test changed packages
+on:
+  pull_request:
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: \${{ steps.list.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: list
+        run: echo 'packages=["api","web"]' >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: \${{ fromJSON(needs.plan.outputs.packages) }}
+        node: [20, 22]
+        include:
+          - package: web
+            browser: true
+    steps:
+      - run: npm test --workspace \${{ matrix.package }}
+      - if: matrix.browser
+        run: npx playwright test
+
+  report:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "every package passed"
+
+  summary:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "test=\${{ needs.test.result }}"
+`,
+    scenario: { event: 'pull_request', action: 'opened', jobOutputs: { plan: { packages: '["api","web"]' } } },
+  },
 ];

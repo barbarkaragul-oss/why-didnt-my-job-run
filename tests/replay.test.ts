@@ -11,7 +11,8 @@ import path from 'node:path';
 import { parseWorkflowFile, type ParsedWorkflow } from '../src/engine/workflow.js';
 import { evaluateCondition, type JobResult } from '../src/engine/evaluate.js';
 import { decideTrigger } from '../src/engine/filters.js';
-import { simulate } from '../src/engine/simulate.js';
+import { simulate, type JobVerdict, type StepVerdict, type SimulationInput } from '../src/engine/simulate.js';
+import { matrixOutputFields } from '../src/engine/matrix.js';
 import { DEFAULT_STATE, toEngineInputs, type ScenarioState } from '../src/ui/scenario.js';
 
 interface Fixture {
@@ -240,4 +241,206 @@ test('filter-negative-only: a list with only negative patterns produces no run a
   assert.equal(sim.trigger.matched, false);
   assert.ok(sim.trigger.reasons.some((r) => /only negative/.test(r)), JSON.stringify(sim.trigger.reasons));
   assert.ok(sim.triggerNotes.some((n) => /only negative patterns/.test(n)), JSON.stringify(sim.triggerNotes));
+});
+
+// fixture-matrix (run 35329520473, dispatched by hand): matrix expansion replayed job by job and combination by
+// combination, with the full names GitHub gave the jobs. The plan job's outputs are what its step echoes into
+// $GITHUB_OUTPUT; the recording's two failing combinations, failfast (2) and nofailfast (2), are marked as failing.
+const conclusionOf = (outcome: string) => (outcome === 'runs' ? 'success' : outcome === 'fails' ? 'failure' : outcome === 'cancelled' ? 'cancelled' : 'skipped');
+/** Every job the simulation creates, under the name GitHub lists it by: one per combination, none for an empty matrix. */
+function createdJobs(jobs: JobVerdict[]): Map<string, { outcome: string; steps: StepVerdict[] }> {
+  const out = new Map<string, { outcome: string; steps: StepVerdict[] }>();
+  // GitHub's names are unique within a run; a name made twice would otherwise hide in the map.
+  const add = (name: string, value: { outcome: string; steps: StepVerdict[] }) => { assert.ok(!out.has(name), `the simulation makes ${name} twice`); out.set(name, value); };
+  for (const v of jobs) {
+    if (v.outcome === 'not-created') continue;
+    if (v.matrix?.combinations.length) for (const c of v.matrix.combinations) add(c.combination.name, { outcome: c.outcome, steps: c.stepVerdicts });
+    else add(v.job.name ?? v.job.id, { outcome: v.outcome, steps: v.stepVerdicts });
+  }
+  return out;
+}
+/** Recorded steps without the runner's own "Set up job" and "Complete job", in workflow order. */
+const workflowSteps = (j: Fixture['jobs'][number]) => (j.steps ?? []).filter((s) => s.name !== 'Set up job' && s.name !== 'Complete job');
+const stepRan = (s: StepVerdict) => !s.if || (s.evaluation?.ok === true && s.evaluation.truthy);
+
+async function replayMatrix() {
+  const fx = fixtures.find((f) => f.workflow === 'fixture-matrix');
+  assert.ok(fx, 'no recording of fixture-matrix');
+  const wf = await loadWorkflow('fixture-matrix');
+  assert.deepEqual(wf.errors, []);
+  const plan = Object.fromEntries(matrixOutputFields(wf).map((f) => [f.output, f.example!]));
+  const state: ScenarioState = { ...DEFAULT_STATE, event: 'workflow_dispatch', branch: fx.head_branch ?? 'main' };
+  const inputs = toEngineInputs(state, wf);
+  const base: SimulationInput = { workflow: wf, github: inputs.github, inputs: inputs.inputs, trigger: inputs.trigger, outputs: { plan } };
+  const first = simulate(base);
+  const forced: Record<string, JobResult> = {};
+  for (const j of fx.jobs.filter((x) => x.conclusion === 'failure')) {
+    const c = first.jobs.flatMap((v) => v.matrix?.combinations ?? []).find((x) => x.combination.name === j.name);
+    assert.ok(c, `${j.name} failed in the recording but is not a combination the simulation made`);
+    forced[c.key] = 'failure';
+  }
+  return { fx, wf, plan, base, forced, sim: simulate({ ...base, forcedResults: forced }) };
+}
+
+test('replay fixture-matrix: every job GitHub listed, by its full name and conclusion, and no other', async () => {
+  const { fx, plan, forced, sim } = await replayMatrix();
+  // the outputs as the file echoes them, read by the same helper that offers them on the page
+  assert.deepEqual(plan, { some: '["a","b"]', none: '[]', whole: '{"include":[{"x":"1"},{"x":"2"}]}', whole_empty: '{"include":[]}' });
+  assert.deepEqual(Object.keys(forced).sort(), ['failfast._2', 'nofailfast._2']);
+  assert.equal(sim.trigger.matched, true);
+  const created = createdJobs(sim.jobs);
+  assert.deepEqual([...created.keys()].sort(), fx.jobs.map((j) => j.name).sort());
+  const mismatches: string[] = [];
+  for (const j of fx.jobs) {
+    const got = conclusionOf(created.get(j.name)!.outcome);
+    if (got !== j.conclusion) mismatches.push(`${j.name}: simulator says ${got}, GitHub ${j.conclusion}`);
+  }
+  assert.deepEqual(mismatches, []);
+});
+
+test('replay fixture-matrix: include and exclude make exactly the recorded combinations, with the recorded matrix values', async () => {
+  const { sim } = await replayMatrix();
+  const combos = (id: string) => sim.jobs.find((v) => v.job.id === id)!.matrix!.combinations.map((c) => [c.combination.name, c.combination.matrix]);
+  assert.deepEqual(combos('plain'), [
+    ['plain (linux, 20)', { os: 'linux', node: 20 }], ['plain (linux, 22)', { os: 'linux', node: 22 }],
+    ['plain (mac, 20)', { os: 'mac', node: 20 }], ['plain (mac, 22)', { os: 'mac', node: 22 }],
+  ]);
+  assert.deepEqual(combos('include_exclude'), [
+    ['include_exclude (apple, cat)', { fruit: 'apple', animal: 'cat', color: 'green', shape: 'circle' }],
+    ['include_exclude (apple, dog)', { fruit: 'apple', animal: 'dog', color: 'green', shape: 'circle' }],
+    ['include_exclude (pear, cat)', { fruit: 'pear', animal: 'cat', color: 'green' }],
+    ['include_exclude (banana)', { fruit: 'banana' }],
+    ['include_exclude (banana, cat)', { fruit: 'banana', animal: 'cat' }],
+  ]);
+  assert.deepEqual(combos('dynamic'), [['dynamic (a)', { target: 'a' }], ['dynamic (b)', { target: 'b' }]]);
+  assert.deepEqual(combos('whole_json'), [['whole_json (1)', { x: '1' }], ['whole_json (2)', { x: '2' }]]);
+});
+
+test('replay fixture-matrix: step conditions that read matrix are decided per combination', async () => {
+  const { fx, sim } = await replayMatrix();
+  const created = createdJobs(sim.jobs);
+  const legs = fx.jobs.filter((j) => /^(plain|include_exclude) \(/.test(j.name));
+  assert.equal(legs.length, 9);
+  const mismatches: string[] = [];
+  for (const j of legs) {
+    const recorded = workflowSteps(j);
+    const ours = created.get(j.name)!.steps;
+    assert.equal(ours.length, recorded.length, j.name);
+    recorded.forEach((s, i) => {
+      const v = ours[i]!;
+      assert.equal(v.unknown, undefined, `${j.name} step ${i + 1} is decided, not unknown`);
+      if ((stepRan(v) ? 'success' : 'skipped') !== s.conclusion) mismatches.push(`${j.name} / ${s.name}: simulator says ${stepRan(v) ? 'runs' : 'skipped'}, GitHub ${s.conclusion}`);
+    });
+  }
+  assert.deepEqual(mismatches, []);
+  // the two conditions the workflow puts on steps, where the recording shows them decided differently per leg
+  assert.deepEqual(legs.filter((j) => workflowSteps(j).some((s) => s.name === 'only linux 22' && s.conclusion === 'success')).map((j) => j.name), ['plain (linux, 22)']);
+  assert.deepEqual(legs.filter((j) => workflowSteps(j).some((s) => s.name === 'only circles' && s.conclusion === 'success')).map((j) => j.name).sort(), ['include_exclude (apple, cat)', 'include_exclude (apple, dog)']);
+});
+
+test('replay fixture-matrix: an empty matrix creates no job at all, and the jobs that need it see failure', async () => {
+  const { fx, sim } = await replayMatrix();
+  const byId = (id: string) => sim.jobs.find((v) => v.job.id === id)!;
+  for (const id of ['dynamic_empty', 'whole_json_empty']) {
+    assert.equal(fx.jobs.filter((j) => j.name === id || j.name.startsWith(`${id} (`)).length, 0, `GitHub listed no ${id} job`);
+    const v = byId(id);
+    assert.equal(v.outcome, 'not-created');
+    assert.equal(v.result, 'failure');
+    assert.equal(v.matrix?.expansion.kind, 'empty');
+    assert.match(v.headline, /No job created/);
+    assert.deepEqual(v.stepVerdicts, []);
+  }
+  // The dependents: recorded conclusions, and the value of needs.<id>.result that each always() job printed.
+  const printed = (name: string) => {
+    const step = workflowSteps(fx.jobs.find((j) => j.name === name)!).find((s) => s.name.startsWith('Run echo "'))!;
+    const m = /^Run echo "(\w+)=(\w+)"$/.exec(step.name);
+    assert.ok(m, step.name);
+    return [m[1]!, m[2]!] as const;
+  };
+  for (const [dependent, need] of [['after_dynamic_empty_always', 'dynamic_empty'], ['after_whole_json_empty_always', 'whole_json_empty'], ['after_failfast_always', 'failfast'], ['after_nofailfast_always', 'nofailfast']] as const) {
+    const [echoedNeed, echoedResult] = printed(dependent);
+    assert.equal(echoedNeed, need);
+    assert.equal(byId(dependent).outcome, 'runs', dependent);
+    assert.equal(byId(dependent).needsResults[need], echoedResult, `${dependent} saw needs.${need}.result == '${echoedResult}'`);
+  }
+  for (const dependent of ['after_dynamic_empty', 'after_whole_json_empty', 'after_failfast']) {
+    assert.equal(fx.jobs.find((j) => j.name === dependent)!.conclusion, 'skipped');
+    assert.equal(byId(dependent).outcome, 'skipped', dependent);
+  }
+  // GitHub shows nothing for the missing job, so the skipped dependent is where the simulation has to say why.
+  assert.match(byId('after_dynamic_empty').headline, /success\(\) is false because dynamic_empty failed\. dynamic_empty counts as failed: its matrix makes no job/);
+  assert.match(byId('after_whole_json_empty_always').headline, /whole_json_empty counts as failed/);
+  // the run as a whole concluded failure
+  assert.equal(fx.conclusion, 'failure');
+  assert.ok(sim.jobs.some((v) => v.result === 'failure'));
+});
+
+test('replay fixture-matrix: fail-fast cancels the other combinations with GitHub\'s annotation; without it they finish', async () => {
+  const { sim } = await replayMatrix();
+  const legs = (id: string) => sim.jobs.find((v) => v.job.id === id)!.matrix!.combinations;
+  assert.deepEqual(legs('failfast').map((c) => [c.combination.name, c.result, c.annotation]), [
+    ['failfast (1)', 'cancelled', 'The strategy configuration was canceled because "failfast._2" failed.'],
+    ['failfast (2)', 'failure', undefined],
+    ['failfast (3)', 'cancelled', 'The strategy configuration was canceled because "failfast._2" failed.'],
+  ]);
+  assert.deepEqual(legs('nofailfast').map((c) => [c.combination.name, c.result, c.annotation]), [
+    ['nofailfast (1)', 'success', undefined], ['nofailfast (2)', 'failure', undefined], ['nofailfast (3)', 'success', undefined],
+  ]);
+});
+
+test('replay fixture-matrix: a matrix job whose own if: is false is one skipped job, not expanded', async () => {
+  const { fx, sim } = await replayMatrix();
+  assert.deepEqual(fx.jobs.filter((j) => j.name.startsWith('skipped_matrix')).map((j) => [j.name, j.conclusion]), [['skipped_matrix', 'skipped']]);
+  const v = sim.jobs.find((x) => x.job.id === 'skipped_matrix')!;
+  assert.equal(v.outcome, 'skipped');
+  assert.equal(v.matrix?.expansion.kind, 'not-expanded');
+  assert.deepEqual(v.matrix?.combinations, []);
+});
+
+test('fixture-matrix without the plan outputs: the four matrices that read them are unknown, not guessed', async () => {
+  const { base } = await replayMatrix();
+  const sim = simulate({ ...base, outputs: undefined });
+  for (const [id, output] of [['dynamic', 'some'], ['dynamic_empty', 'none'], ['whole_json', 'whole'], ['whole_json_empty', 'whole_empty']] as const) {
+    const v = sim.jobs.find((x) => x.job.id === id)!;
+    assert.equal(v.matrix?.expansion.kind, 'unknown', id);
+    assert.deepEqual(v.matrix?.combinations, []);
+    assert.match(v.headline, new RegExp(`needs\\.plan\\.outputs\\.${output}\\b`));
+    assert.match(v.headline, /GitHub creates no job/);
+  }
+  // the jobs after an unknown matrix say what their verdict rests on
+  assert.match(sim.jobs.find((x) => x.job.id === 'after_dynamic_empty')!.headline, /assumes the matrix of dynamic_empty makes at least one job/);
+  // literal matrices do not depend on outputs
+  assert.equal(sim.jobs.find((x) => x.job.id === 'plain')!.matrix?.combinations.length, 4);
+});
+
+// fixture-a's matrix_job: node [20, 22], exclude node 20, include {node: 24, experimental: true}. GitHub named the legs
+// "matrix_job (22)" and "matrix_job (24, true)": the entry that made a combination of its own shows all its values.
+test('replay fixture-a matrix_job: combination names and step outcomes in every run', async () => {
+  const wf = await loadWorkflow('fixture-a');
+  const runs = fixtures.filter((f) => f.workflow === 'fixture-a' && f.github);
+  assert.ok(runs.length >= 20);
+  for (const fx of runs) {
+    const gh = fx.github!;
+    const event = (gh['event'] ?? {}) as Record<string, unknown>;
+    const sim = simulate({
+      workflow: wf, github: gh, inputs: typedInputs((fx.inputs ?? {}) as Record<string, unknown>, wf),
+      trigger: { event: fx.event, action: typeof event['action'] === 'string' ? event['action'] : undefined, refName: String(gh['ref_name']), refType: String(gh['ref']).startsWith('refs/tags/') ? 'tag' : 'branch', baseBranch: String(gh['base_ref'] || '') || undefined, changedFiles: fx.changed_files ?? [] },
+    });
+    assert.equal(sim.trigger.matched, true, `run ${fx.run_id}`);
+    const recorded = fx.jobs.filter((j) => j.name === 'matrix_job' || j.name.startsWith('matrix_job ('));
+    const v = sim.jobs.find((x) => x.job.id === 'matrix_job')!;
+    if (recorded.length === 1 && recorded[0]!.name === 'matrix_job') {
+      assert.equal(recorded[0]!.conclusion, 'skipped');
+      assert.equal(v.outcome, 'skipped', `run ${fx.run_id}`);
+      assert.equal(v.matrix?.expansion.kind, 'not-expanded');
+      continue;
+    }
+    const combos = v.matrix!.combinations;
+    assert.deepEqual(combos.map((c) => c.combination.name).sort(), recorded.map((j) => j.name).sort(), `run ${fx.run_id}`);
+    for (const j of recorded) {
+      const c = combos.find((x) => x.combination.name === j.name)!;
+      assert.equal(conclusionOf(c.outcome), j.conclusion, `${j.name} in run ${fx.run_id}`);
+      assert.deepEqual(c.stepVerdicts.map((s) => (stepRan(s) ? 'success' : 'skipped')), workflowSteps(j).map((s) => s.conclusion), `${j.name} steps in run ${fx.run_id}`);
+    }
+  }
 });

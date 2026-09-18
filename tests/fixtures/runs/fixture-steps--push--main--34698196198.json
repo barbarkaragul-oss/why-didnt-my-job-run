@@ -1,0 +1,122 @@
+{
+  "recorded_at": "2026-09-18T09:29:36.491Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34698196198,
+  "workflow": "fixture-steps",
+  "workflow_path": ".github/workflows/fixture-steps.yml",
+  "event": "push",
+  "head_branch": "main",
+  "head_sha": "3da0ce41c0dbc3d175dade11efe52f48c7de554a",
+  "conclusion": "failure",
+  "display_title": "Strip the job token from the context dump; README and license for goi…",
+  "changed_files": [
+    ".github/workflows/filter-branches.yml",
+    ".github/workflows/fixture-a.yml",
+    "LICENSE",
+    "README.md"
+  ],
+  "jobs": [
+    {
+      "name": "steps_fail",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run exit 1",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Run echo f2",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo f3",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run echo f4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo f5",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "steps_continue",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run exit 1",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo s2",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run echo s3",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo s4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo s5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo s6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "steps_after_failed_need",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo n1",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run echo n2",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo n3",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo n4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

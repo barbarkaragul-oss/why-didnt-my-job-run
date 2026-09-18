@@ -1,5 +1,6 @@
 import { parseWorkflowFile, type ParsedWorkflow } from '../engine/workflow.js';
-import { simulate, type Simulation, type JobVerdict } from '../engine/simulate.js';
+import { simulate, type Simulation, type JobVerdict, type StepVerdict, type CombinationVerdict } from '../engine/simulate.js';
+import { matrixOutputFields } from '../engine/matrix.js';
 import type { JobResult, EvaluationResult, EvaluationFailure } from '../engine/evaluate.js';
 import { SAMPLES } from './samples.js';
 import { PAYLOADS, EVENT_ORDER } from './payloads.js';
@@ -94,6 +95,7 @@ function loadSample(id: string) {
   const s = SAMPLES.find((x) => x.id === id) ?? SAMPLES[0]!;
   yaml = s.yaml;
   state = { ...DEFAULT_STATE, ...(s.scenario as Partial<ScenarioState>) };
+  outputFieldsKey = '';
   if (!state.action) state.action = defaultAction(state.event);
   $('sample-blurb').textContent = s.blurb;
   syncCommonFields();
@@ -190,6 +192,57 @@ function renderDispatchInputs() {
   }
 }
 
+// ---------- job outputs a matrix reads ----------
+// A matrix built from `fromJSON(needs.<job>.outputs.<name>)` depends on what that job writes at run time. The page
+// asks for the value instead of guessing: unknown, empty, or the example the workflow itself echoes.
+let outputFieldsKey = '';
+let outputTimer: number | undefined;
+
+function renderOutputFields() {
+  const el = $('outputs');
+  const fields = workflow ? matrixOutputFields(workflow) : [];
+  const key = JSON.stringify(fields);
+  if (key === outputFieldsKey) return;
+  outputFieldsKey = key;
+  el.replaceChildren();
+  if (!fields.length) return;
+  el.append(
+    h('h3', { text: 'Job outputs a matrix reads' }),
+    h('p', { class: 'muted', text: 'The value is the string the job writes to $GITHUB_OUTPUT, usually JSON. Left empty, it is unknown and the matrix is not expanded.' }),
+  );
+  for (const f of fields) {
+    const input = h('input', { type: 'text', spellcheck: 'false', placeholder: 'unknown', 'aria-label': `needs.${f.job}.outputs.${f.output}` });
+    input.value = state.jobOutputs?.[f.job]?.[f.output] ?? '';
+    const set = (value: string | undefined) => {
+      const all = { ...(state.jobOutputs ?? {}) };
+      const forJob = { ...(all[f.job] ?? {}) };
+      if (value === undefined || value === '') delete forJob[f.output];
+      else forJob[f.output] = value;
+      if (Object.keys(forJob).length) all[f.job] = forJob;
+      else delete all[f.job];
+      state.jobOutputs = all;
+    };
+    input.addEventListener('input', () => {
+      if (outputTimer) clearTimeout(outputTimer);
+      outputTimer = window.setTimeout(() => { set(input.value); schedule(0); }, 150);
+    });
+    const choice = (label: string, value: string | undefined) => {
+      const b = h('button', { type: 'button', text: label });
+      b.addEventListener('click', () => { set(value); input.value = value ?? ''; schedule(0); });
+      return b;
+    };
+    const empty = f.wholeMatrix ? '{"include":[]}' : '[]';
+    el.append(h('div', { class: 'output' },
+      h('div', {}, h('code', { text: `needs.${f.job}.outputs.${f.output}` }), h('span', { class: 'muted', text: ` read by ${f.readBy.join(', ')}` })),
+      input,
+      h('div', { class: 'choices' },
+        choice('unknown', undefined),
+        choice(`${empty} (empty)`, empty),
+        f.example !== undefined && f.example !== empty ? choice(`${f.example} (from the file)`, f.example) : null),
+    ));
+  }
+}
+
 // ---------- run ----------
 function schedule(ms: number) {
   if (parseTimer) clearTimeout(parseTimer);
@@ -203,8 +256,9 @@ async function run() {
     workflow = await parseWorkflowFile(yaml);
     const nowDispatchInputs = JSON.stringify((workflow.events as Record<string, unknown>)['workflow_dispatch'] ?? null);
     if (state.event === 'workflow_dispatch' && hadDispatchInputs !== nowDispatchInputs) renderKnobs();
+    renderOutputFields();
     const inputs = toEngineInputs(state, workflow);
-    sim = simulate({ workflow, github: inputs.github, inputs: inputs.inputs, trigger: inputs.trigger, forcedResults: state.forcedResults, cancelled: state.cancelled });
+    sim = simulate({ workflow, github: inputs.github, inputs: inputs.inputs, trigger: inputs.trigger, forcedResults: state.forcedResults, cancelled: state.cancelled, outputs: state.jobOutputs });
     status.textContent = workflow.errors.length ? `${workflow.jobs.length} jobs · ${workflow.errors.length} problem${workflow.errors.length === 1 ? '' : 's'}` : `${workflow.jobs.length} job${workflow.jobs.length === 1 ? '' : 's'} · parsed with @actions/workflow-parser`;
     render(inputs.github, inputs.notes);
   } catch (e) {
@@ -251,14 +305,10 @@ function render(github: Record<string, unknown>, notes: string[]) {
 function renderJob(v: JobVerdict): HTMLElement {
   const job = v.job;
   const card = h('div', { class: 'card' });
-  const title = h('h3', {}, h('span', { class: `pill ${v.outcome}`, text: pillText(v.outcome) }), h('span', { class: 'mono', text: job.id }), job.name && job.name !== job.id ? h('span', { class: 'muted', text: job.name }) : null, job.reusable ? h('span', { class: 'chip', text: 'reusable workflow' }) : null);
-  if (v.outcome === 'runs' || v.outcome === 'fails' || v.outcome === 'cancelled') {
-    const sel = h('select');
-    for (const r of ['success', 'failure', 'cancelled'] as JobResult[]) sel.append(h('option', { value: r, text: r }));
-    sel.value = state.forcedResults[job.id] ?? (state.cancelled ? 'cancelled' : 'success');
-    sel.addEventListener('change', () => { state.forcedResults = { ...state.forcedResults, [job.id]: sel.value as JobResult }; schedule(0); });
-    title.append(h('span', { class: 'force' }, 'ends with', sel));
-  }
+  const combinations = v.matrix?.combinations ?? [];
+  const title = h('h3', {}, h('span', { class: `pill ${v.outcome}`, text: pillText(v.outcome) }), h('span', { class: 'mono', text: job.id }), job.name && job.name !== job.id ? h('span', { class: 'muted', text: job.name }) : null, job.reusable ? h('span', { class: 'chip', text: 'reusable workflow' }) : null, v.matrix ? h('span', { class: 'chip', text: combinations.length ? `matrix · ${combinations.length} job${combinations.length === 1 ? '' : 's'}` : 'matrix' }) : null);
+  // A matrix that expanded is marked combination by combination below.
+  if ((v.outcome === 'runs' || v.outcome === 'fails' || v.outcome === 'cancelled') && !combinations.length) title.append(forceSelect(job.id, state.forcedResults[job.id]));
   card.append(title);
   if (v.outcome === 'rejected') {
     // The parser may have dropped the very condition it rejected, so showing the if: line here would mislead.
@@ -272,7 +322,7 @@ function renderJob(v: JobVerdict): HTMLElement {
     // Why did those upstream jobs not succeed? Show each one's own condition and decisive values right here, so the
     // reader does not have to scroll up to chase the chain.
     const culprits = Object.entries(v.ancestorResults).filter(([, r]) => r !== 'success').map(([id]) => sim!.jobs.find((x) => x.job.id === id)).filter((x): x is JobVerdict => !!x);
-    if (culprits.length && (v.outcome === 'skipped' || v.outcome === 'runs' || v.outcome === 'fails')) {
+    if (culprits.length && (v.outcome === 'skipped' || v.outcome === 'runs' || v.outcome === 'fails' || v.outcome === 'not-created')) {
       const list = h('ul', { class: 'upstream' });
       for (const c of culprits) {
         const cond = c.job.ifSource ? `if: ${c.job.ifSource}` : 'no if:';
@@ -293,21 +343,73 @@ function renderJob(v: JobVerdict): HTMLElement {
   for (const p of v.problems) card.append(h('div', { class: 'problem', text: p.message }));
   if (v.evaluation && v.evaluation.ok && v.evaluation.subValues.length) card.append(traceDetails(v.evaluation));
   if (v.evaluation && !v.evaluation.ok) card.append(h('div', { class: 'problem', text: v.evaluation.error }));
-  if (job.steps.length) {
-    const list = h('ul', { class: 'steps' });
-    for (const s of v.stepVerdicts) {
-      const ev = s.evaluation;
-      const pill = !s.if ? h('span', { class: 'pill runs', text: 'runs' }) : s.unknown ? h('span', { class: 'pill blocked', text: 'unknown' }) : ev && ev.ok ? h('span', { class: `pill ${ev.truthy ? 'runs' : 'skipped'}`, text: ev.truthy ? 'runs' : 'skipped' }) : h('span', { class: 'pill blocked', text: 'unknown' });
-      const li = h('li', {}, pill, h('code', { text: s.summary || s.id }), s.if ? h('span', { class: 'muted', text: `if: ${s.if}` }) : null);
-      if (s.unknown) li.append(h('span', { class: 'muted', text: `→ ${s.unknown}` }));
-      else if (ev && ev.ok && s.if) li.append(h('span', { class: 'muted', text: `→ ${ev.reason}` }));
-      if (ev && !ev.ok) li.append(h('span', { class: 'muted', text: ev.error }));
-      for (const p of s.problems) li.append(h('span', { class: 'problem', text: p.message }));
-      list.append(li);
-    }
-    card.append(h('details', {}, h('summary', { text: `${job.steps.length} step${job.steps.length === 1 ? '' : 's'}` }), list));
+  if (v.matrix) card.append(renderMatrix(v));
+  // Each combination lists its own steps; a job that was never created has none.
+  if (job.steps.length && !combinations.length && v.outcome !== 'not-created') {
+    card.append(h('details', {}, h('summary', { text: `${job.steps.length} step${job.steps.length === 1 ? '' : 's'}` }), renderSteps(v.stepVerdicts)));
   }
   return card;
+}
+
+function forceSelect(key: string, forced: JobResult | undefined): HTMLElement {
+  const sel = h('select', { 'aria-label': `${key} ends with` });
+  for (const r of ['success', 'failure', 'cancelled'] as JobResult[]) sel.append(h('option', { value: r, text: r }));
+  sel.value = forced ?? (state.cancelled ? 'cancelled' : 'success');
+  sel.addEventListener('change', () => { state.forcedResults = { ...state.forcedResults, [key]: sel.value as JobResult }; schedule(0); });
+  return h('span', { class: 'force' }, 'ends with', sel);
+}
+
+function renderSteps(steps: StepVerdict[]): HTMLElement {
+  const list = h('ul', { class: 'steps' });
+  for (const s of steps) {
+    const ev = s.evaluation;
+    const pill = !s.if ? h('span', { class: 'pill runs', text: 'runs' }) : s.unknown ? h('span', { class: 'pill blocked', text: 'unknown' }) : ev && ev.ok ? h('span', { class: `pill ${ev.truthy ? 'runs' : 'skipped'}`, text: ev.truthy ? 'runs' : 'skipped' }) : h('span', { class: 'pill blocked', text: 'unknown' });
+    const li = h('li', {}, pill, h('code', { text: s.summary || s.id }), s.if ? h('span', { class: 'muted', text: `if: ${s.if}` }) : null);
+    if (s.unknown) li.append(h('span', { class: 'muted', text: `→ ${s.unknown}` }));
+    else if (ev && ev.ok && s.if) li.append(h('span', { class: 'muted', text: `→ ${ev.reason}` }));
+    if (ev && !ev.ok) li.append(h('span', { class: 'muted', text: ev.error }));
+    for (const p of s.problems) li.append(h('span', { class: 'problem', text: p.message }));
+    list.append(li);
+  }
+  return list;
+}
+
+/** The strategy in one line, then one row per combination, or why there is none. */
+function renderMatrix(v: JobVerdict): HTMLElement {
+  const m = v.matrix!;
+  const box = h('div', { class: 'matrix' }, h('code', { class: 'expr' }, h('span', { class: 'wrap', text: 'strategy: ' }), m.line.replace(/^strategy: /, '')));
+  const e = m.expansion;
+  if (e.kind === 'not-expanded') {
+    if (v.outcome === 'skipped') box.append(h('p', { class: 'muted', text: 'One skipped job, not one per combination: GitHub decides the job\'s if: before it expands the matrix, and lists the job under its plain name.' }));
+  } else if (e.kind === 'unknown') {
+    const names = e.reads.filter((r) => r.source === 'unknown').map((r) => `needs.${r.job}.outputs.${r.output}`);
+    box.append(h('p', { class: 'muted', text: `Give ${names.join(' and ')} a value under "Job outputs a matrix reads" (in the Event panel) to see the jobs it makes.` }));
+  } else if (e.kind === 'empty' || e.kind === 'error') {
+    const dependents = sim!.jobs.filter((x) => x.job.needs.includes(v.job.id));
+    if (dependents.length) {
+      box.append(h('div', { class: 'needs' }, `needs.${v.job.id}.result is failure for: `, ...dependents.map((d) => h('span', { class: 'chip', text: `${d.job.id} → ${pillText(d.outcome)}${d.job.ifSource ? '' : ' (no if:)'}` }))));
+    }
+  } else if (e.kind === 'combinations') {
+    const list = h('ul', { class: 'combos' });
+    for (const c of m.combinations) list.append(renderCombination(v, c));
+    box.append(list);
+  }
+  return box;
+}
+
+function renderCombination(v: JobVerdict, c: CombinationVerdict): HTMLElement {
+  const head = h('div', { class: 'combo-head' }, h('span', { class: `pill ${c.outcome}`, text: pillText(c.outcome) }), h('span', { class: 'mono', text: c.combination.name }), c.combination.origin === 'include' ? h('span', { class: 'chip', text: 'from include' }) : null, forceSelect(c.key, state.forcedResults[c.key] ?? state.forcedResults[v.job.id]));
+  const li = h('li', { class: 'combo' }, head);
+  if (c.annotation) li.append(h('div', { class: 'note' }, h('strong', { text: 'Annotation: ' }), c.annotation));
+  else if (c.headline !== 'Runs.') li.append(h('div', { class: 'muted', text: c.headline }));
+  const steps = c.stepVerdicts;
+  // The parser gives a step without if: the condition success(); that one is not worth counting.
+  const decided = steps.filter((s) => s.if && s.if !== 'success()').length;
+  li.append(h('details', {},
+    h('summary', { text: `matrix values${steps.length ? ` and ${steps.length} step${steps.length === 1 ? '' : 's'}${decided ? ` (${decided} with a condition)` : ''}` : ''}` }),
+    h('code', { class: 'expr', text: `matrix: ${JSON.stringify(c.combination.matrix)}` }),
+    steps.length ? renderSteps(steps) : null));
+  return li;
 }
 
 function traceDetails(ev: EvaluationResult): HTMLElement {
@@ -317,7 +419,7 @@ function traceDetails(ev: EvaluationResult): HTMLElement {
 }
 
 function pillText(o: JobVerdict['outcome']): string {
-  return o === 'runs' ? 'runs' : o === 'skipped' ? 'skipped' : o === 'fails' ? 'runs, fails' : o === 'cancelled' ? 'cancelled' : 'not run';
+  return o === 'runs' ? 'runs' : o === 'skipped' ? 'skipped' : o === 'fails' ? 'runs, fails' : o === 'cancelled' ? 'cancelled' : o === 'not-created' ? 'no job created' : 'not run';
 }
 
 let toastTimer: number | undefined;

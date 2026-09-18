@@ -1,0 +1,689 @@
+{
+  "recorded_at": "2026-09-18T09:29:27.276Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 35329520473,
+  "workflow": "fixture-matrix",
+  "workflow_path": ".github/workflows/fixture-matrix.yml",
+  "event": "workflow_dispatch",
+  "head_branch": "main",
+  "head_sha": "a578767a0c058ca8f440cd35732e8c6a52ad0d96",
+  "conclusion": "failure",
+  "display_title": "fixture-matrix",
+  "github": {
+    "job": "context",
+    "ref": "refs/heads/main",
+    "sha": "a578767a0c058ca8f440cd35732e8c6a52ad0d96",
+    "repository": "barbarkaragul-oss/wdmjr-fixtures",
+    "repository_owner": "barbarkaragul-oss",
+    "repository_owner_id": "247049124",
+    "repositoryUrl": "git://github.com/barbarkaragul-oss/wdmjr-fixtures.git",
+    "run_id": "35329520473",
+    "run_number": "1",
+    "retention_days": "90",
+    "run_attempt": "1",
+    "artifact_cache_size_limit": "10",
+    "repository_visibility": "public",
+    "actor_id": "247049124",
+    "actor": "barbarkaragul-oss",
+    "workflow": "fixture-matrix",
+    "head_ref": "",
+    "base_ref": "",
+    "event_name": "workflow_dispatch",
+    "server_url": "https://github.com",
+    "api_url": "https://api.github.com",
+    "graphql_url": "https://api.github.com/graphql",
+    "ref_name": "main",
+    "ref_protected": false,
+    "ref_type": "branch",
+    "secret_source": "Actions",
+    "event": {
+      "ref": "refs/heads/main",
+      "workflow": ".github/workflows/fixture-matrix.yml",
+      "inputs": null,
+      "repository": {
+        "id": 1367232572,
+        "node_id": "R_kgDOUX5QPA",
+        "name": "wdmjr-fixtures",
+        "full_name": "barbarkaragul-oss/wdmjr-fixtures",
+        "private": false,
+        "owner": {
+          "login": "barbarkaragul-oss",
+          "id": 247049124,
+          "node_id": "U_kgDODrmrpA",
+          "avatar_url": "https://avatars.githubusercontent.com/u/247049124?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/barbarkaragul-oss",
+          "html_url": "https://github.com/barbarkaragul-oss",
+          "followers_url": "https://api.github.com/users/barbarkaragul-oss/followers",
+          "following_url": "https://api.github.com/users/barbarkaragul-oss/following{/other_user}",
+          "gists_url": "https://api.github.com/users/barbarkaragul-oss/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/barbarkaragul-oss/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/barbarkaragul-oss/subscriptions",
+          "organizations_url": "https://api.github.com/users/barbarkaragul-oss/orgs",
+          "repos_url": "https://api.github.com/users/barbarkaragul-oss/repos",
+          "events_url": "https://api.github.com/users/barbarkaragul-oss/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/barbarkaragul-oss/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/barbarkaragul-oss/wdmjr-fixtures",
+        "description": "Ground-truth fixtures for Why didn't my job run?: real GitHub Actions runs of deliberately tricky workflows, recorded and replayed by the simulator's tests.",
+        "fork": false,
+        "url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures",
+        "forks_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/forks",
+        "keys_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/teams",
+        "hooks_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/hooks",
+        "issue_events_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/events",
+        "assignees_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/tags",
+        "blobs_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/languages",
+        "stargazers_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/stargazers",
+        "contributors_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/contributors",
+        "subscribers_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/subscribers",
+        "subscription_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/subscription",
+        "commits_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/merges",
+        "archive_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/downloads",
+        "issues_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/labels{/name}",
+        "releases_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/barbarkaragul-oss/wdmjr-fixtures/deployments",
+        "created_at": "2026-09-12T11:26:17Z",
+        "updated_at": "2026-09-18T09:25:56Z",
+        "pushed_at": "2026-09-18T09:25:52Z",
+        "git_url": "git://github.com/barbarkaragul-oss/wdmjr-fixtures.git",
+        "ssh_url": "git@github.com:barbarkaragul-oss/wdmjr-fixtures.git",
+        "clone_url": "https://github.com/barbarkaragul-oss/wdmjr-fixtures.git",
+        "svn_url": "https://github.com/barbarkaragul-oss/wdmjr-fixtures",
+        "homepage": "https://github.com/barbarkaragul-oss/why-didnt-my-job-run",
+        "size": 10,
+        "stargazers_count": 0,
+        "watchers_count": 0,
+        "language": null,
+        "has_issues": true,
+        "has_projects": false,
+        "has_downloads": false,
+        "has_wiki": false,
+        "has_pages": false,
+        "has_discussions": false,
+        "forks_count": 0,
+        "mirror_url": null,
+        "archived": false,
+        "disabled": false,
+        "open_issues_count": 4,
+        "license": {
+          "key": "mit",
+          "name": "MIT License",
+          "spdx_id": "MIT",
+          "url": "https://api.github.com/licenses/mit",
+          "node_id": "MDc6TGljZW5zZTEz"
+        },
+        "allow_forking": true,
+        "is_template": false,
+        "web_commit_signoff_required": false,
+        "has_pull_requests": true,
+        "pull_request_creation_policy": "all",
+        "topics": [],
+        "visibility": "public",
+        "forks": 0,
+        "open_issues": 4,
+        "watchers": 0,
+        "default_branch": "main"
+      },
+      "sender": {
+        "login": "barbarkaragul-oss",
+        "id": 247049124,
+        "node_id": "U_kgDODrmrpA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/247049124?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/barbarkaragul-oss",
+        "html_url": "https://github.com/barbarkaragul-oss",
+        "followers_url": "https://api.github.com/users/barbarkaragul-oss/followers",
+        "following_url": "https://api.github.com/users/barbarkaragul-oss/following{/other_user}",
+        "gists_url": "https://api.github.com/users/barbarkaragul-oss/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/barbarkaragul-oss/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/barbarkaragul-oss/subscriptions",
+        "organizations_url": "https://api.github.com/users/barbarkaragul-oss/orgs",
+        "repos_url": "https://api.github.com/users/barbarkaragul-oss/repos",
+        "events_url": "https://api.github.com/users/barbarkaragul-oss/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/barbarkaragul-oss/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      }
+    },
+    "workflow_ref": "barbarkaragul-oss/wdmjr-fixtures/.github/workflows/fixture-matrix.yml@refs/heads/main",
+    "workflow_sha": "a578767a0c058ca8f440cd35732e8c6a52ad0d96",
+    "repository_id": "1367232572",
+    "triggering_actor": "barbarkaragul-oss",
+    "workspace": "/home/runner/work/wdmjr-fixtures/wdmjr-fixtures"
+  },
+  "inputs": {},
+  "jobs": [
+    {
+      "name": "context",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"::WDMJR_GITHUB_START::\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "failfast (2)",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run if [ \"2\" = \"2\" ]; then exit 1; fi",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "nofailfast (3)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run if [ \"3\" = \"2\" ]; then exit 1; fi",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "failfast (1)",
+      "conclusion": "cancelled",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run if [ \"1\" = \"2\" ]; then exit 1; fi",
+          "conclusion": "cancelled"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "plain (linux, 20)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"linux 20\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "only linux 22",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "plan",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo 'some=[\"a\",\"b\"]' >> \"$GITHUB_OUTPUT\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "nofailfast (2)",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run if [ \"2\" = \"2\" ]; then exit 1; fi",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "failfast (3)",
+      "conclusion": "cancelled",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run if [ \"3\" = \"2\" ]; then exit 1; fi",
+          "conclusion": "cancelled"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "plain (mac, 20)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"mac 20\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "only linux 22",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "include_exclude (banana)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo '{",
+          "conclusion": "success"
+        },
+        {
+          "name": "only circles",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "nofailfast (1)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run if [ \"1\" = \"2\" ]; then exit 1; fi",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "include_exclude (banana, cat)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo '{",
+          "conclusion": "success"
+        },
+        {
+          "name": "only circles",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "include_exclude (pear, cat)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo '{",
+          "conclusion": "success"
+        },
+        {
+          "name": "only circles",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "plain (linux, 22)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"linux 22\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "only linux 22",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "include_exclude (apple, dog)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo '{",
+          "conclusion": "success"
+        },
+        {
+          "name": "only circles",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "plain (mac, 22)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"mac 22\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "only linux 22",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "include_exclude (apple, cat)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo '{",
+          "conclusion": "success"
+        },
+        {
+          "name": "only circles",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "skipped_matrix",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "dynamic (b)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"b\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "whole_json (2)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"2\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "whole_json (1)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"1\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "dynamic (a)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"a\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "after_whole_json_empty_always",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"whole_json_empty=failure\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "after_dynamic_empty_always",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"dynamic_empty=failure\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "after_whole_json_empty",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "after_dynamic_empty",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "after_nofailfast_always",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"nofailfast=failure\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "after_failfast_always",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"failfast=failure\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "after_failfast",
+      "conclusion": "skipped",
+      "steps": []
+    }
+  ]
+}

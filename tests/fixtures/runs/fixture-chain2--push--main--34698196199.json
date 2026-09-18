@@ -1,0 +1,104 @@
+{
+  "recorded_at": "2026-09-18T09:29:35.321Z",
+  "repo": "barbarkaragul-oss/wdmjr-fixtures",
+  "run_id": 34698196199,
+  "workflow": "fixture-chain2",
+  "workflow_path": ".github/workflows/fixture-chain2.yml",
+  "event": "push",
+  "head_branch": "main",
+  "head_sha": "3da0ce41c0dbc3d175dade11efe52f48c7de554a",
+  "conclusion": "success",
+  "display_title": "Strip the job token from the context dump; README and license for goi…",
+  "changed_files": [
+    ".github/workflows/filter-branches.yml",
+    ".github/workflows/fixture-a.yml",
+    "LICENSE",
+    "README.md"
+  ],
+  "jobs": [
+    {
+      "name": "y_always_after_x",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"x=skipped\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "w_not_cancelled_after_x",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo w",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "u_after_v",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run echo \"v=skipped\"",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "x_skipped_by_if",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "v_no_if_after_x",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "z3_failure_after_y",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "z_no_if_after_y",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "z2_success_after_y",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "name": "t_no_if_after_u",
+      "conclusion": "skipped",
+      "steps": []
+    }
+  ]
+}
