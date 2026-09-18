@@ -8,6 +8,70 @@ export interface Sample {
 }
 
 export const SAMPLES: Sample[] = [
+  // The page opens on this one. Everything it shows is replayed from recorded runs: a job with no if: is skipped
+  // when a job it needs was skipped (fixture-chain2), always() runs regardless, failure() is false when upstream
+  // jobs were only skipped (fixture-chain2) and true when one failed (fixture-chain).
+  {
+    id: 'release-tag',
+    title: 'Pushed a tag, nothing deployed',
+    blurb: 'The tag v1.4.0 is pushed and deploy is skipped, although its own condition is true on a tag. Its card names where the skip started, two jobs up: build does not run for tags. notify still runs (always()); open-issue runs only when something failed. Try a push to main, or mark lint as failing.',
+    yaml: `name: CI and release
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run lint
+
+  build:
+    needs: lint
+    # Save minutes: no builds for tags or Dependabot
+    if: github.ref_type == 'branch' && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run build
+      - uses: actions/upload-artifact@v4
+        with: { name: dist, path: dist }
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: dist, path: dist }
+      - run: npm ci && npm test
+
+  deploy:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./scripts/deploy.sh "\${{ github.ref_name }}"
+
+  notify:
+    needs: [build, test, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "build=\${{ needs.build.result }} test=\${{ needs.test.result }} deploy=\${{ needs.deploy.result }}"
+
+  open-issue:
+    needs: [build, test, deploy]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh issue create --title "CI failed on \${{ github.ref_name }}"
+`,
+    scenario: { event: 'push', refType: 'tag', tag: 'v1.4.0' },
+  },
   {
     id: 'deploy-main',
     title: 'Deploy only on main',

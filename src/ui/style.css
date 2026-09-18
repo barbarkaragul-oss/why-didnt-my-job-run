@@ -50,7 +50,7 @@ button:hover { border-color: var(--accent); }
 label.check { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 13px; margin: 4px 0; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .chip { font-size: 12px; padding: 1px 7px; border-radius: 10px; background: var(--skip-bg); color: var(--skip-fg); }
-.card { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; background: var(--bg); }
+.card { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; background: var(--bg); overflow-wrap: anywhere; }
 .card h3 { margin: 0; font-size: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pill { font-size: 11.5px; font-weight: 600; letter-spacing: .3px; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; }
 .pill.runs { background: var(--run-bg); color: var(--run-fg); }
@@ -75,10 +75,12 @@ table.trace td:first-child { font-family: var(--mono); width: 60%; word-break: b
 table.trace td:last-child { font-family: var(--mono); color: var(--accent); }
 ul.reasons { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; }
 ul.reasons li { margin: 2px 0; }
-.problem { background: var(--fail-bg); color: var(--fail-fg); border: 1px solid transparent; border-radius: 6px; padding: 6px 10px; margin-bottom: 6px; font-size: 13px; }
-.note { background: var(--warn-bg); color: var(--warn-fg); border-radius: 6px; padding: 6px 10px; margin-bottom: 6px; font-size: 13px; }
+.problem { background: var(--fail-bg); color: var(--fail-fg); border: 1px solid transparent; border-radius: 6px; padding: 6px 10px; margin-bottom: 6px; font-size: 13px; overflow-wrap: anywhere; }
+.note { background: var(--warn-bg); color: var(--warn-fg); border-radius: 6px; padding: 6px 10px; margin-bottom: 6px; font-size: 13px; overflow-wrap: anywhere; }
 .steps { margin: 8px 0 0; padding: 0; list-style: none; font-size: 12.5px; }
-.steps li { display: flex; gap: 8px; align-items: baseline; padding: 3px 0; border-top: 1px dashed var(--border); }
+.steps li { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; padding: 3px 0; border-top: 1px dashed var(--border); }
+/* A long condition or reason wraps inside the card instead of pushing the page sideways on a phone. */
+.steps li > * { min-width: 0; overflow-wrap: anywhere; }
 .steps .pill { font-size: 10.5px; }
 .steps code { white-space: pre-wrap; word-break: break-word; }
 .needs { font-size: 12.5px; color: var(--muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
@@ -116,3 +118,21 @@ ul.combos > li { border-top: 1px dashed var(--border); padding: 5px 0; }
 .outputs .output input { font-family: var(--mono); }
 .outputs .choices { display: flex; flex-wrap: wrap; gap: 4px; }
 .outputs .choices button { font-family: var(--mono); font-size: 12px; padding: 2px 8px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Where a skip started, on the card of a job skipped because of a job upstream: first thing under the title. */
+.rootcause { margin: 8px 0 4px; padding: 6px 10px; border-left: 3px solid var(--accent); background: var(--panel); border-radius: 0 6px 6px 0; font-size: 13.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.rootcause code { font-size: 12.5px; }
+/* What the simulation cannot fully decide for this workflow: above the job cards, never collapsed. */
+.limits { background: var(--warn-bg); border: 1px solid var(--warn-fg); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 13px; overflow-wrap: anywhere; }
+.limits-head { margin: 0 0 4px; font-weight: 600; color: var(--warn-fg); }
+.limits ul { margin: 0; padding-left: 18px; }
+.limits li { margin: 3px 0; }
+/* Softer than the item, but not --muted: on the dark yellow background that falls below 4.5:1. */
+.limits .instead { opacity: .8; }
+/* Phones: the results come after the editor and the event, so say so and link to them. */
+.mobile-note { display: none; }
+#results { scroll-margin-top: 8px; }
+@media (max-width: 720px) {
+  .mobile-note { display: block; margin: 4px 12px 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--muted); font-size: 13px; }
+  .links { flex-wrap: wrap; white-space: normal; }
+  textarea#yaml { min-height: 320px; }
+}

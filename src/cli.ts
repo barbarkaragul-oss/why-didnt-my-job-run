@@ -19,7 +19,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { parseWorkflowFile, type ParsedJob } from './engine/workflow.js';
-import { simulate, type Simulation, type JobVerdict, type JobOutcome, type StepVerdict, type MatrixVerdict, type CombinationVerdict } from './engine/simulate.js';
+import { simulate, type Simulation, type JobVerdict, type JobOutcome, type StepVerdict, type MatrixVerdict, type CombinationVerdict, type RootCause } from './engine/simulate.js';
+import type { Limit } from './engine/limits.js';
 import { outputExample, type OutputRead } from './engine/matrix.js';
 import type { JobResult } from './engine/evaluate.js';
 import type { Json } from './engine/context.js';
@@ -166,6 +167,8 @@ export interface CliJob {
   steps: CliStep[];
   /** Set when the job has a matrix; `outcome` is then the whole matrix's, as the jobs that need it see it. */
   matrix?: CliMatrix;
+  /** Set when the job is skipped because of a job upstream: where the skip started. The headline starts with `line`. */
+  rootCause?: { line: string; causes: RootCause[]; ownCondition?: { truthy: boolean; reason: string } };
 }
 
 export interface CliMatrix {
@@ -205,6 +208,8 @@ export interface CliWorkflow {
   rejected: boolean;
   fileProblems: string[];
   notes: string[];
+  /** What the simulation cannot fully decide in this workflow, as the page lists it above the results. */
+  limits: Limit[];
   jobs: CliJob[];
 }
 
@@ -638,6 +643,7 @@ function toCliWorkflow(file: string, name: string | undefined, sim: Simulation, 
     rejected: sim.rejected,
     fileProblems: [...sim.fileProblems, ...sim.graphProblems],
     notes,
+    limits: sim.limits,
     jobs: sim.jobs.map((v) => toCliJob(v, jobs)),
   };
 }
@@ -657,6 +663,7 @@ function toCliJob(v: JobVerdict, jobs: ParsedJob[]): CliJob {
     problems: v.problems.map((p) => p.message),
     steps: ran && !v.matrix?.combinations.length ? v.stepVerdicts.map(toCliStep) : [],
     ...(v.matrix ? { matrix: toCliMatrix(v.matrix, jobs) } : {}),
+    ...(v.rootCause ? { rootCause: { line: v.rootCause.line, causes: v.rootCause.causes, ...(v.rootCause.ownCondition ? { ownCondition: v.rootCause.ownCondition } : {}) } } : {}),
   };
 }
 
@@ -760,6 +767,11 @@ export function formatReport(r: CliReport): string {
       for (const reason of condense(w.triggerReasons)) lines.push(`    ${reason}`);
     }
     for (const n of [...w.triggerNotes, ...w.notes]) lines.push(`  note: ${n}`);
+    // The same list the page shows above the results: what this run of the simulation takes on trust.
+    if (w.limits.length) {
+      lines.push('  limits:');
+      for (const l of w.limits) lines.push(`    ${l.title}: ${l.where.join('; ')}. ${l.instead}`);
+    }
     const width = Math.max(...w.jobs.map((j) => j.id.length), 0);
     const col = Math.max(10, ...w.jobs.flatMap((j) => [j.outcome, ...(j.matrix?.combinations ?? []).map((c) => c.outcome)]).map((o) => o.length + 2));
     const pad = ' '.repeat(2 + col + width + 2);
@@ -794,7 +806,9 @@ export function formatReport(r: CliReport): string {
 }
 
 function jobReason(j: CliJob): string[] {
-  // The outcome word already says runs or skipped; the engine's headline repeats it.
+  // The outcome word already says runs or skipped; the engine's headline repeats it. A job skipped because of a job
+  // upstream says only where that started: its own success() being false is what "skipped" already means.
+  if (j.rootCause) return [`→ ${j.headline.replace(/^Skipped because /, 'because ')}`];
   const lines = [`→ ${j.headline.replace(/^(Runs|Skipped): /, '')}`];
   // A job marked with --fail says so in its headline; keep the reason its condition was true as well.
   if (j.if !== undefined && j.reason && !j.headline.includes(j.reason)) lines.unshift(`→ ${j.reason}`);

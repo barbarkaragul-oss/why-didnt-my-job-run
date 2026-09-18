@@ -56,6 +56,21 @@ export interface EvaluationResult {
   subValues: SubValue[];
   /** Short human explanation of the decisive part of the expression. */
   reason: string;
+  /** The same decisive part, taken apart, for a job further down that names this one as the root cause. */
+  decisive: Decisive;
+}
+
+/** The sub-expression that decided a condition. */
+export interface Decisive {
+  /** As written, e.g. `github.ref_type == 'branch'`. */
+  text: string;
+  value: string;
+  /** What it compared or read, with values: `github.ref_type is "tag"`. */
+  sides: string[];
+  /** A coercion that explains a surprising result: loose equality, case-insensitive strings. */
+  hint: string | undefined;
+  /** The status function when the decisive part is a bare success(), failure(), cancelled() or always(). */
+  status: 'success' | 'failure' | 'cancelled' | 'always' | undefined;
 }
 
 export interface EvaluationFailure {
@@ -122,7 +137,8 @@ export function evaluateCondition(expression: string, github: Json, opts: Evalua
     .filter((t) => !(t.node instanceof Literal))
     .map((t) => ({ text: exprText(t.node), value: displayValue(t.value), kind: kindStr(t.value.kind), depth: 0 }));
   const truthy = isTruthy(value);
-  let reason = explain(ast, ev.trace, truthy);
+  const decisive = explain(ast, ev.trace, truthy);
+  let reason = phrase(decisive);
   // Status functions are only as informative as the needs behind them: say which job did it.
   const m = /^(success|failure|cancelled)\(\) is (true|false)$/.exec(reason);
   if (m) {
@@ -137,7 +153,7 @@ export function evaluateCondition(expression: string, github: Json, opts: Evalua
     else if (m[1] === 'failure' && m[2] === 'false') reason = Object.keys(scope).length ? 'failure() is false: no job upstream failed' : 'failure() is false: the job needs nothing that could have failed';
     else if (m[1] === 'success' && m[2] === 'true') reason = Object.keys(scope).length ? 'success() is true: every job upstream succeeded' : 'success() is true: the job needs nothing';
   }
-  return { ok: true, truthy, value: displayValue(value), kind: kindStr(value.kind), subValues, reason };
+  return { ok: true, truthy, value: displayValue(value), kind: kindStr(value.kind), subValues, reason, decisive };
 }
 
 /** Runner truthiness for `if:`: false, null, 0, '' are false; everything else (objects too) is true. */
@@ -182,12 +198,12 @@ export function exprText(n: Expr): string {
 }
 
 /**
- * Finds the decisive sub-expression and phrases it. For a false `&&` chain that is the first false
- * operand; for a true `||` chain the first true operand; for a true `&&` chain the last operand that
- * is not a bare status function (so `success() && (x == y)` explains `x == y`). Comparisons are
- * phrased with both sides' values, and a note is added when GitHub's loose equality coerced types.
+ * Finds the decisive sub-expression. For a false `&&` chain that is the first false operand; for a true `||` chain
+ * the first true operand; for a true `&&` chain the last operand that is not a bare status function (so
+ * `success() && (x == y)` explains `x == y`). A comparison keeps both sides' values, and a note when GitHub's loose
+ * equality coerced types.
  */
-function explain(root: Expr, trace: Array<{ node: Expr; value: data.ExpressionData }>, truthy: boolean): string {
+function explain(root: Expr, trace: Array<{ node: Expr; value: data.ExpressionData }>, truthy: boolean): Decisive {
   const valueOf = (n: Expr) => trace.find((t) => t.node === n)?.value;
   const isStatusCall = (n: Expr) => n instanceof FunctionCall && ['success', 'failure', 'cancelled', 'always'].includes(n.functionName.lexeme.toLowerCase());
   let node: Expr = root;
@@ -205,21 +221,26 @@ function explain(root: Expr, trace: Array<{ node: Expr; value: data.ExpressionDa
   }
   const v = valueOf(node);
   const text = exprText(node);
-  const shown = v ? displayValue(v) : truthy ? 'true' : 'false';
+  const status = isStatusCall(node) ? (node as FunctionCall).functionName.lexeme.toLowerCase() as Decisive['status'] : undefined;
   if (node instanceof Binary && v) {
     const sides = [node.left, node.right].filter((s) => !(s instanceof Literal)).map((s) => { const sv = valueOf(s); return `${exprText(s)} is ${sv ? displayValue(sv) : '?'}`; });
     const l = valueOf(node.left); const r = valueOf(node.right);
-    let hint = '';
+    let hint: string | undefined;
     if (l && r && (node.operator.lexeme === '==' || node.operator.lexeme === '!=') && l.kind !== r.kind) {
-      hint = ` (loose equality: ${kindStr(l.kind).toLowerCase()} and ${kindStr(r.kind).toLowerCase()} are compared as numbers, null/false/'' count as 0)`;
+      hint = `loose equality: ${kindStr(l.kind).toLowerCase()} and ${kindStr(r.kind).toLowerCase()} are compared as numbers, null/false/'' count as 0`;
     } else if (l && r && l.kind === data.Kind.String && r.kind === data.Kind.String && (node.operator.lexeme === '==' || node.operator.lexeme === '!=') && l.coerceString() !== r.coerceString() && l.coerceString().toLowerCase() === r.coerceString().toLowerCase()) {
-      hint = ' (string comparison is case-insensitive)';
+      hint = 'string comparison is case-insensitive';
     }
-    return `${sides.join(', ')}${sides.length ? ' → ' : ''}${text} is ${displayValue(v)}${hint}`;
+    return { text, value: displayValue(v), sides, hint, status };
   }
   if (node instanceof FunctionCall && v && node.functionName.lexeme.toLowerCase() === 'contains' && node.args.length === 2) {
     const a = valueOf(node.args[0]!);
-    return `${exprText(node.args[0]!)} is ${a ? displayValue(a) : '?'} → ${text} is ${displayValue(v)}`;
+    return { text, value: displayValue(v), sides: [`${exprText(node.args[0]!)} is ${a ? displayValue(a) : '?'}`], hint: undefined, status };
   }
-  return `${text} is ${shown}`;
+  return { text, value: v ? displayValue(v) : truthy ? 'true' : 'false', sides: [], hint: undefined, status };
+}
+
+/** `github.ref is "refs/pull/2/merge" → github.ref == 'refs/heads/main' is false`, the decisive part in one line. */
+function phrase(d: Decisive): string {
+  return `${d.sides.join(', ')}${d.sides.length ? ' → ' : ''}${d.text} is ${d.value}${d.hint ? ` (${d.hint})` : ''}`;
 }

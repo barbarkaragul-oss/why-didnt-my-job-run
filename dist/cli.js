@@ -1188,8 +1188,8 @@ var require_stringifyString = __commonJS({
             case "u":
               {
                 str2 += json.slice(start, i);
-                const code = json.substr(i + 2, 4);
-                switch (code) {
+                const code2 = json.substr(i + 2, 4);
+                switch (code2) {
                   case "0000":
                     str2 += "\\0";
                     break;
@@ -1215,8 +1215,8 @@ var require_stringifyString = __commonJS({
                     str2 += "\\P";
                     break;
                   default:
-                    if (code.substr(0, 2) === "00")
-                      str2 += "\\x" + code.substr(2);
+                    if (code2.substr(0, 2) === "00")
+                      str2 += "\\x" + code2.substr(2);
                     else
                       str2 += json.substr(i, 6);
                 }
@@ -3715,22 +3715,22 @@ var require_errors = __commonJS({
   "node_modules/yaml/dist/errors.js"(exports) {
     "use strict";
     var YAMLError = class extends Error {
-      constructor(name, pos, code, message) {
+      constructor(name, pos, code2, message) {
         super();
         this.name = name;
-        this.code = code;
+        this.code = code2;
         this.message = message;
         this.pos = pos;
       }
     };
     var YAMLParseError = class extends YAMLError {
-      constructor(pos, code, message) {
-        super("YAMLParseError", pos, code, message);
+      constructor(pos, code2, message) {
+        super("YAMLParseError", pos, code2, message);
       }
     };
     var YAMLWarning = class extends YAMLError {
-      constructor(pos, code, message) {
-        super("YAMLWarning", pos, code, message);
+      constructor(pos, code2, message) {
+        super("YAMLWarning", pos, code2, message);
       }
     };
     var prettifyError = (src, lc) => (error) => {
@@ -4639,7 +4639,7 @@ var require_resolve_flow_scalar = __commonJS({
       const { offset, type, source, end } = scalar;
       let _type;
       let value;
-      const _onError = (rel, code, msg) => onError(offset + rel, code, msg);
+      const _onError = (rel, code2, msg) => onError(offset + rel, code2, msg);
       switch (type) {
         case "scalar":
           _type = Scalar.Scalar.PLAIN;
@@ -4837,9 +4837,9 @@ var require_resolve_flow_scalar = __commonJS({
     function parseCharCode(source, offset, length, onError) {
       const cc = source.substr(offset, length);
       const ok = cc.length === length && /^[0-9a-fA-F]+$/.test(cc);
-      const code = ok ? parseInt(cc, 16) : NaN;
+      const code2 = ok ? parseInt(cc, 16) : NaN;
       try {
-        return String.fromCodePoint(code);
+        return String.fromCodePoint(code2);
       } catch {
         const raw = source.substr(offset - 2, length + 2);
         onError(offset - 2, "BAD_DQ_ESCAPE", `Invalid escape sequence ${raw}`);
@@ -5161,12 +5161,12 @@ var require_composer = __commonJS({
         this.prelude = [];
         this.errors = [];
         this.warnings = [];
-        this.onError = (source, code, message, warning) => {
+        this.onError = (source, code2, message, warning) => {
           const pos = getErrorPos(source);
           if (warning)
-            this.warnings.push(new errors.YAMLWarning(pos, code, message));
+            this.warnings.push(new errors.YAMLWarning(pos, code2, message));
           else
-            this.errors.push(new errors.YAMLParseError(pos, code, message));
+            this.errors.push(new errors.YAMLParseError(pos, code2, message));
         };
         this.directives = new directives.Directives({ version: options.version || "1.2" });
         this.options = options;
@@ -5328,12 +5328,12 @@ var require_cst_scalar = __commonJS({
     var stringifyString = require_stringifyString();
     function resolveAsScalar(token, strict = true, onError) {
       if (token) {
-        const _onError = (pos, code, message) => {
+        const _onError = (pos, code2, message) => {
           const offset = typeof pos === "number" ? pos : Array.isArray(pos) ? pos[0] : pos.offset;
           if (onError)
-            onError(offset, code, message);
+            onError(offset, code2, message);
           else
-            throw new errors.YAMLParseError([offset, offset + 1], code, message);
+            throw new errors.YAMLParseError([offset, offset + 1], code2, message);
         };
         switch (token.type) {
           case "scalar":
@@ -8753,10 +8753,10 @@ function parseFileReference(ref) {
 
 // node_modules/@actions/workflow-parser/dist/templates/template-validation-error.js
 var TemplateValidationError = class {
-  constructor(rawMessage, prefix, code, range) {
+  constructor(rawMessage, prefix, code2, range) {
     this.rawMessage = rawMessage;
     this.prefix = prefix;
-    this.code = code;
+    this.code = code2;
     this.range = range;
   }
   get message() {
@@ -14225,7 +14225,8 @@ async function parseWorkflowFile(content, fileName = "workflow.yml") {
     name: readName(content),
     events: template.events ?? {},
     jobs: (template.jobs ?? []).map(toJob),
-    errors: [...new Set(errors)]
+    errors: [...new Set(errors)],
+    ...template.concurrency ? { concurrency: groupText(template.concurrency) } : {}
   };
 }
 function toJob(job) {
@@ -14245,6 +14246,9 @@ function toJob(job) {
     outputs: job.outputs ? Object.fromEntries([...job.outputs].map((p) => [tokenText(p.key), sourceText(p.value)])) : void 0,
     runsOn,
     reusable: job.type === "reusableWorkflowJob",
+    ...job.type === "reusableWorkflowJob" ? { uses: tokenText(job.ref) } : {},
+    ...job.type === "job" && job.environment ? { environment: fieldText(job.environment, "name") } : {},
+    ...job.concurrency ? { concurrency: groupText(job.concurrency) } : {},
     steps
   };
 }
@@ -14267,6 +14271,16 @@ function toStep(step, index) {
 function sourceText(token) {
   const t = token;
   return typeof t.expression === "string" && typeof t.source === "string" ? t.source : tokenText(token);
+}
+function groupText(token) {
+  return fieldText(token, "group");
+}
+function fieldText(token, key) {
+  if (isMapping(token)) {
+    for (const pair of token) if (isString(pair.key) && pair.key.value === key) return sourceText(pair.value);
+    return token.toString();
+  }
+  return sourceText(token);
 }
 function tokenText(token) {
   if (!token) return "";
@@ -14579,7 +14593,8 @@ function evaluateCondition(expression, github, opts) {
   }
   const subValues = ev.trace.filter((t) => !(t.node instanceof Literal)).map((t) => ({ text: exprText(t.node), value: displayValue(t.value), kind: kindStr(t.value.kind), depth: 0 }));
   const truthy2 = isTruthy(value);
-  let reason = explain(ast, ev.trace, truthy2);
+  const decisive = explain(ast, ev.trace, truthy2);
+  let reason = phrase(decisive);
   const m = /^(success|failure|cancelled)\(\) is (true|false)$/.exec(reason);
   if (m) {
     const scope = opts.ancestors ?? opts.needs;
@@ -14592,7 +14607,7 @@ function evaluateCondition(expression, github, opts) {
     else if (m[1] === "failure" && m[2] === "false") reason = Object.keys(scope).length ? "failure() is false: no job upstream failed" : "failure() is false: the job needs nothing that could have failed";
     else if (m[1] === "success" && m[2] === "true") reason = Object.keys(scope).length ? "success() is true: every job upstream succeeded" : "success() is true: the job needs nothing";
   }
-  return { ok: true, truthy: truthy2, value: displayValue(value), kind: kindStr(value.kind), subValues, reason };
+  return { ok: true, truthy: truthy2, value: displayValue(value), kind: kindStr(value.kind), subValues, reason, decisive };
 }
 function isTruthy(v) {
   switch (v.kind) {
@@ -14669,7 +14684,7 @@ function explain(root, trace, truthy2) {
   }
   const v = valueOf(node);
   const text = exprText(node);
-  const shown = v ? displayValue(v) : truthy2 ? "true" : "false";
+  const status = isStatusCall(node) ? node.functionName.lexeme.toLowerCase() : void 0;
   if (node instanceof Binary && v) {
     const sides = [node.left, node.right].filter((s) => !(s instanceof Literal)).map((s) => {
       const sv = valueOf(s);
@@ -14677,19 +14692,22 @@ function explain(root, trace, truthy2) {
     });
     const l = valueOf(node.left);
     const r = valueOf(node.right);
-    let hint = "";
+    let hint;
     if (l && r && (node.operator.lexeme === "==" || node.operator.lexeme === "!=") && l.kind !== r.kind) {
-      hint = ` (loose equality: ${kindStr(l.kind).toLowerCase()} and ${kindStr(r.kind).toLowerCase()} are compared as numbers, null/false/'' count as 0)`;
+      hint = `loose equality: ${kindStr(l.kind).toLowerCase()} and ${kindStr(r.kind).toLowerCase()} are compared as numbers, null/false/'' count as 0`;
     } else if (l && r && l.kind === data_exports.Kind.String && r.kind === data_exports.Kind.String && (node.operator.lexeme === "==" || node.operator.lexeme === "!=") && l.coerceString() !== r.coerceString() && l.coerceString().toLowerCase() === r.coerceString().toLowerCase()) {
-      hint = " (string comparison is case-insensitive)";
+      hint = "string comparison is case-insensitive";
     }
-    return `${sides.join(", ")}${sides.length ? " \u2192 " : ""}${text} is ${displayValue(v)}${hint}`;
+    return { text, value: displayValue(v), sides, hint, status };
   }
   if (node instanceof FunctionCall && v && node.functionName.lexeme.toLowerCase() === "contains" && node.args.length === 2) {
     const a = valueOf(node.args[0]);
-    return `${exprText(node.args[0])} is ${a ? displayValue(a) : "?"} \u2192 ${text} is ${displayValue(v)}`;
+    return { text, value: displayValue(v), sides: [`${exprText(node.args[0])} is ${a ? displayValue(a) : "?"}`], hint: void 0, status };
   }
-  return `${text} is ${shown}`;
+  return { text, value: v ? displayValue(v) : truthy2 ? "true" : "false", sides: [], hint: void 0, status };
+}
+function phrase(d) {
+  return `${d.sides.join(", ")}${d.sides.length ? " \u2192 " : ""}${d.text} is ${d.value}${d.hint ? ` (${d.hint})` : ""}`;
 }
 
 // src/engine/availability.ts
@@ -14994,6 +15012,14 @@ function collectOutputRefs(token) {
   }
   return out;
 }
+function outputRefsInExpression(expression) {
+  const out = [];
+  try {
+    refsIn(parseExpression(expression, statusFunctions({ needs: {} })), out);
+  } catch {
+  }
+  return uniqueRefs(out);
+}
 function refsIn(n, out) {
   const ref = asOutputRef(n);
   if (ref) {
@@ -15198,6 +15224,114 @@ function describe(v) {
 var fromJsonHint = (v) => v instanceof data_exports.StringData && /^\s*[[{]/.test(v.coerceString()) ? "; a job output is always a string, so read it with fromJSON()" : "";
 var uniq = (xs) => [...new Set(xs)];
 
+// src/engine/limits.ts
+var INSTEAD = {
+  "reusable-workflow": { title: "Reusable workflow", instead: "Its condition is decided like any other job's; the jobs inside the called workflow are not simulated, and the call is shown as one job." },
+  "matrix-output": { title: "Matrix from a job output with no value yet", instead: "The matrix is not expanded until that output has a value, and the jobs after it assume it makes at least one job." },
+  "matrix-assumed": { title: "Matrix outcome no recorded run covers", instead: "Taken to end like the recorded empty matrix: no job, and failure for the jobs that need it." },
+  "fail-fast": { title: "fail-fast timing", instead: "Every other combination is taken to be still running when one fails, so all of them are cancelled; on GitHub, those that already finished keep their result." },
+  "job-output": { title: "Job output read by a condition", instead: "Taken as empty (null): only the job knows what it writes at run time." },
+  vars: { title: "Configuration variable", instead: "Taken as empty (null): its value lives in the repository's settings." },
+  "step-unknown": { title: "Step condition that reads steps.*, env or hashFiles()", instead: "Marked unknown instead of guessed: step outputs, env and the files in the checkout exist only at run time." },
+  "step-matrix": { title: "Step condition that reads matrix in a job without one", instead: "Marked unknown: no recorded run shows what GitHub gives such a step." },
+  "step-failure": { title: "Step that runs after a failed step", instead: "Every earlier step is taken to have succeeded, so failure() is false there; a step cannot be marked as failing here." },
+  environment: { title: "Deployment environment", instead: "Its protection rules (required reviewers, allowed branches, wait timers) live in the repository's settings and are not simulated; the job is shown as starting." },
+  concurrency: { title: "Concurrency group", instead: "Not simulated: another run in the same group can cancel this one or make it wait." },
+  "matrix-name": { title: "Matrix job name from an expression", instead: "Each job is listed under the evaluated name, without the values GitHub otherwise appends; this follows the check names of public repositories, not a recorded run." }
+};
+var ORDER = Object.keys(INSTEAD);
+function findLimits(workflow, jobs, known) {
+  const found = /* @__PURE__ */ new Map();
+  const add = (kind, where) => {
+    const list = found.get(kind) ?? [];
+    if (!list.includes(where)) list.push(where);
+    found.set(kind, list);
+  };
+  const byId = new Map(jobs.map((v) => [v.job.id.toLowerCase(), v]));
+  const ran = (v) => v.outcome === "runs" || v.outcome === "fails" || v.outcome === "cancelled";
+  const readsOutputs = (v, expression, at) => {
+    for (const ref of outputRefsInExpression(expression)) {
+      const producer = byId.get(ref.job.toLowerCase());
+      if (!producer || !v.job.needs.some((n) => n.toLowerCase() === ref.job.toLowerCase()) || producer.result === "skipped" || producer.outcome === "not-created") continue;
+      const declared = Object.keys(producer.job.outputs ?? {}).some((k) => k.toLowerCase() === ref.output.toLowerCase());
+      const given = Object.keys(known.outputs[producer.job.id] ?? {}).some((k) => k.toLowerCase() === ref.output.toLowerCase());
+      if (declared && !given) add("job-output", `${at} reads needs.${producer.job.id}.outputs.${ref.output}`);
+    }
+  };
+  const readsVars = (expression, at) => {
+    for (const name of varsRead(expression)) if (!Object.keys(known.vars).some((k) => k.toLowerCase() === name.toLowerCase())) add("vars", `${at} reads vars.${name}`);
+  };
+  if (workflow.concurrency !== void 0) add("concurrency", `the workflow (group: ${workflow.concurrency})`);
+  for (const v of jobs) {
+    const id = v.job.id;
+    if (v.outcome === "blocked" || v.outcome === "rejected") continue;
+    if (v.job.ifSource !== void 0) {
+      readsOutputs(v, v.job.if, id);
+      readsVars(v.job.if, id);
+    }
+    const e = v.matrix?.expansion;
+    if (e?.kind === "unknown") add("matrix-output", `${id} reads ${e.reads.filter((r) => r.source === "unknown").map((r) => `needs.${r.job}.outputs.${r.output}`).join(" and ")}`);
+    if (v.outcome === "not-created" && (e?.kind === "error" || e?.kind === "empty" && !e.recorded)) add("matrix-assumed", `${id}: ${e.reason}`);
+    if (!ran(v)) continue;
+    if (v.job.reusable) add("reusable-workflow", `${id} (uses: ${v.job.uses ?? "?"})`);
+    if (v.job.environment !== void 0) add("environment", `${id} (environment: ${v.job.environment})`);
+    if (v.job.concurrency !== void 0) add("concurrency", `${id} (group: ${v.job.concurrency})`);
+    if (v.job.strategy) for (const expression of expressionsIn(v.job.strategy)) readsVars(expression, `${id}'s strategy`);
+    const combinations = v.matrix?.combinations ?? [];
+    const cancelled = combinations.filter((c) => c.annotation);
+    if (cancelled.length) add("fail-fast", `${id}: ${combinations.filter((c) => c.result === "failure").map((c) => c.combination.name).join(", ")} failed, ${cancelled.length} cancelled`);
+    if (combinations.length && v.job.name && /\$\{\{[\s\S]*\b(matrix|strategy)\b/.test(v.job.name)) add("matrix-name", `${id} (name: ${v.job.name})`);
+    const steps = combinations.length ? combinations.flatMap((c) => c.stepVerdicts) : v.stepVerdicts;
+    for (const s of steps) {
+      if (!s.if) continue;
+      const at = `${id} \xB7 ${stepLabel(v, s)}`;
+      if (s.unknown && /^reads (steps\.|env\.|hashFiles)/.test(s.unknown)) add("step-unknown", `${at} (if: ${written(s.if)})`);
+      else if (s.unknown?.includes("in a job without a matrix")) add("step-matrix", `${at} (if: ${written(s.if)})`);
+      else if (/\bfailure\s*\(/i.test(s.if)) add("step-failure", `${at} (if: ${written(s.if)})`);
+      readsOutputs(v, s.if, at);
+      readsVars(s.if, at);
+    }
+  }
+  return ORDER.filter((k) => found.has(k)).map((kind) => ({ kind, ...INSTEAD[kind], where: found.get(kind) }));
+}
+function stepLabel(v, s) {
+  const name = v.job.steps.find((x) => x.id === s.id)?.name ?? s.summary ?? s.id;
+  const text = name || s.id;
+  return text.length > 48 ? `${text.slice(0, 45)}...` : text;
+}
+function written(expression) {
+  return /^success\(\) && \((.*)\)$/s.exec(expression)?.[1] ?? expression;
+}
+function expressionsIn(token) {
+  const out = [];
+  for (const [, t] of TemplateToken.traverse(token)) if (isBasicExpression(t)) out.push(t.expression);
+  return out;
+}
+function varsRead(expression) {
+  let ast;
+  try {
+    ast = parseExpression(expression, statusFunctions({ needs: {} }));
+  } catch {
+    return [];
+  }
+  const names = /* @__PURE__ */ new Set();
+  const walk = (n) => {
+    if (n instanceof IndexAccess) {
+      if (n.expr instanceof ContextAccess && n.expr.name.lexeme.toLowerCase() === "vars" && n.index instanceof Literal && n.index.literal.kind === data_exports.Kind.String) names.add(n.index.literal.coerceString());
+      walk(n.expr);
+      walk(n.index);
+    } else if (n instanceof FunctionCall) n.args.forEach(walk);
+    else if (n instanceof Binary) {
+      walk(n.left);
+      walk(n.right);
+    } else if (n instanceof Logical) n.args.forEach(walk);
+    else if (n instanceof Unary) walk(n.expr);
+    else if (n instanceof Grouping) walk(n.group);
+  };
+  walk(ast);
+  return [...names];
+}
+
 // src/engine/simulate.ts
 function simulate(input) {
   const { workflow } = input;
@@ -15216,6 +15350,8 @@ function simulate(input) {
   const ancestorsOf = /* @__PURE__ */ new Map();
   const results = /* @__PURE__ */ new Map();
   const verdicts = /* @__PURE__ */ new Map();
+  const ownCauses = /* @__PURE__ */ new Map();
+  const inherited = /* @__PURE__ */ new Map();
   for (const job of order) {
     const needsResults = {};
     for (const n of job.needs) needsResults[n] = results.get(n) ?? "skipped";
@@ -15331,18 +15467,111 @@ function simulate(input) {
     } else {
       stepVerdicts = stepsFor(void 0, NO_MATRIX, /\b(matrix)\./);
     }
+    const causes = input.cancelled ? [] : causesThrough(job.needs, verdicts, ownCauses, inherited);
+    inherited.set(job.id, causes);
+    const byUpstream = outcome === "skipped" && evaluation.ok && !evaluation.truthy && evaluation.decisive.status === "success" && causes.length > 0;
+    ownCauses.set(job.id, byUpstream ? void 0 : ownCause(job.id, outcome, evaluation, matrix));
+    let rootCause;
+    if (byUpstream) {
+      const inner = /^success\(\) && \((.*)\)$/s.exec(job.if)?.[1];
+      const wrapped = inner !== void 0 && job.ifSource !== void 0 && !/\b(success|failure|cancelled|always)\s*\(/i.test(job.ifSource);
+      const own = wrapped ? evaluateCondition(inner, input.github, { needs: needsCtx, ancestors: ancestorsCtx, cancelled: input.cancelled, contexts: { inputs: input.inputs, vars: input.vars ?? {} } }) : void 0;
+      rootCause = summarize(causes, own && own.ok ? { truthy: own.truthy, reason: own.reason } : void 0);
+      headline = rootCause.line;
+    }
     if (outcome !== "rejected" && outcome !== "blocked") {
       const upstream = [...ancestors].map((a) => verdicts.get(a)).filter((v) => !!v);
-      const empty = upstream.filter((v) => v.outcome === "not-created").map((v) => v.job.id);
+      const named = new Set(rootCause?.causes.map((c) => c.job));
+      const empty = upstream.filter((v) => v.outcome === "not-created" && !named.has(v.job.id)).map((v) => v.job.id);
       const unknown = upstream.filter((v) => v.matrix?.expansion.kind === "unknown").map((v) => v.job.id);
       const sentence = (s) => /[.)]$/.test(s) ? s : `${s}.`;
       if (empty.length) headline = `${sentence(headline)} ${empty.join(" and ")} ${empty.length === 1 ? "counts as failed: its matrix makes" : "count as failed: their matrices make"} no job, and GitHub reports that as failure.`;
       if (unknown.length) headline = `${sentence(headline)} This assumes the matrix of ${unknown.join(" and ")} makes at least one job; if it comes out empty, GitHub creates none and reports failure for it.`;
     }
     results.set(job.id, result);
-    verdicts.set(job.id, { job, outcome, result, evaluation, headline, needsResults, ancestorResults, problems, stepVerdicts, ...matrix ? { matrix } : {} });
+    verdicts.set(job.id, { job, outcome, result, evaluation, headline, needsResults, ancestorResults, problems, stepVerdicts, ...matrix ? { matrix } : {}, ...rootCause ? { rootCause } : {} });
   }
-  return { trigger, triggerNotes, fileProblems, jobs: order.map((j) => verdicts.get(j.id)), graphProblems, rejected };
+  const jobs = order.map((j) => verdicts.get(j.id));
+  const limits = rejected || !trigger.matched ? [] : findLimits(workflow, jobs, { outputs: known, vars: input.vars ?? {} });
+  return { trigger, triggerNotes, fileProblems, jobs, graphProblems, rejected, limits };
+}
+function ownCause(job, outcome, evaluation, matrix) {
+  if (outcome === "not-created") return { job, kind: "not-created" };
+  if (outcome === "cancelled") return { job, kind: "cancelled" };
+  if (outcome === "fails") {
+    const failed = matrix?.combinations.filter((c) => c.result === "failure").map((c) => c.combination.name) ?? [];
+    return { job, kind: "failed", ...failed.length ? { combinations: failed } : {} };
+  }
+  if (outcome !== "skipped") return void 0;
+  return evaluation.ok ? { job, kind: "condition", decisive: evaluation.decisive } : { job, kind: "error" };
+}
+function causesThrough(needs, verdicts, own, inherited) {
+  const out = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const n of needs) {
+    const v = verdicts.get(n);
+    if (!v) continue;
+    const mine = v.result !== "success" ? own.get(n) : void 0;
+    const behind = (inherited.get(n) ?? []).map((c) => ({ ...c, via: [{ job: n, result: v.result, ...mine ? { own: true } : {} }, ...c.via] }));
+    const list = mine ? [{ ...mine, via: [] }, ...behind] : behind;
+    for (const c of list) if (!seen.has(c.job)) {
+      seen.add(c.job);
+      out.push(c);
+    }
+  }
+  return out;
+}
+var code = (text) => ({ text, code: true });
+function rootSegments(c) {
+  switch (c.kind) {
+    case "condition": {
+      const d = c.decisive;
+      const detail = [d.sides.join(", "), d.hint ?? ""].filter(Boolean).join("; ");
+      return [code(c.job), { text: "'s condition " }, code(d.text), { text: ` is ${d.value}${detail ? ` (${detail})` : ""}` }];
+    }
+    case "error":
+      return [code(c.job), { text: "'s condition could not be evaluated" }];
+    case "failed":
+      return c.combinations?.length ? [...listed(c.combinations.map(code)), { text: " failed" }] : [code(c.job), { text: " failed" }];
+    case "cancelled":
+      return [code(c.job), { text: " was cancelled" }];
+    case "not-created":
+      return [code(c.job), { text: "'s matrix makes no job, which GitHub reports as failure" }];
+  }
+}
+function chainSegments(c) {
+  const out = [];
+  const passedOn = (hop) => hop.result === "skipped" && !hop.own;
+  for (let i = 0; i < c.via.length; i++) {
+    const hop = c.via[i];
+    if (passedOn(hop)) {
+      out.push(code(hop.job), { text: " was skipped, because " });
+    } else {
+      out.push({ text: "upstream of " }, code(hop.job), { text: hop.result === "success" ? " (which ran), " : ", " });
+      while (c.via[i + 1] && !passedOn(c.via[i + 1])) i++;
+    }
+  }
+  return [...out, ...rootSegments(c)];
+}
+function listed(items) {
+  return items.flatMap((s, i) => i === 0 ? [s] : [{ text: i === items.length - 1 ? " and " : ", " }, s]);
+}
+function summarize(causes, ownCondition) {
+  const shown = causes.slice(0, 2);
+  const rest = causes.slice(2);
+  const segments = [{ text: "Skipped because " }];
+  shown.forEach((c, i) => segments.push(...i ? [{ text: "; and because " }] : [], ...chainSegments(c)));
+  if (rest.length) segments.push({ text: `; and ${rest.length} more: ` }, ...listed(rest.map((c) => code(c.job))));
+  segments.push({ text: "." });
+  if (shown.some((c) => c.via.some((h) => h.result !== "skipped" || h.own))) segments.push({ text: " success() looks at every job upstream, not only the ones in needs." });
+  if (ownCondition) segments.push({ text: ownCondition.truthy ? " Its own condition is true for this event." : ` Its own condition is false too: ${ownCondition.reason}.` });
+  const merged = [];
+  for (const s of segments) {
+    const last = merged[merged.length - 1];
+    if (last && !last.code && !s.code) last.text += s.text;
+    else merged.push({ ...s });
+  }
+  return { causes, ...ownCondition ? { ownCondition } : {}, segments: merged, line: merged.map((s) => s.text).join("") };
 }
 var NO_MATRIX = "the simulation does not know in a job without a matrix";
 function readsText(reads) {
@@ -16256,6 +16485,7 @@ function toCliWorkflow(file, name, sim, notes, jobs) {
     rejected: sim.rejected,
     fileProblems: [...sim.fileProblems, ...sim.graphProblems],
     notes,
+    limits: sim.limits,
     jobs: sim.jobs.map((v) => toCliJob(v, jobs))
   };
 }
@@ -16273,7 +16503,8 @@ function toCliJob(v, jobs) {
     needs: v.needsResults,
     problems: v.problems.map((p) => p.message),
     steps: ran && !v.matrix?.combinations.length ? v.stepVerdicts.map(toCliStep) : [],
-    ...v.matrix ? { matrix: toCliMatrix(v.matrix, jobs) } : {}
+    ...v.matrix ? { matrix: toCliMatrix(v.matrix, jobs) } : {},
+    ...v.rootCause ? { rootCause: { line: v.rootCause.line, causes: v.rootCause.causes, ...v.rootCause.ownCondition ? { ownCondition: v.rootCause.ownCondition } : {} } } : {}
   };
 }
 function toCliMatrix(m, jobs) {
@@ -16362,6 +16593,10 @@ function formatReport(r) {
       for (const reason of condense(w.triggerReasons)) lines.push(`    ${reason}`);
     }
     for (const n of [...w.triggerNotes, ...w.notes]) lines.push(`  note: ${n}`);
+    if (w.limits.length) {
+      lines.push("  limits:");
+      for (const l of w.limits) lines.push(`    ${l.title}: ${l.where.join("; ")}. ${l.instead}`);
+    }
     const width = Math.max(...w.jobs.map((j) => j.id.length), 0);
     const col = Math.max(10, ...w.jobs.flatMap((j) => [j.outcome, ...(j.matrix?.combinations ?? []).map((c) => c.outcome)]).map((o) => o.length + 2));
     const pad = " ".repeat(2 + col + width + 2);
@@ -16391,6 +16626,7 @@ function formatReport(r) {
   return lines.join("\n");
 }
 function jobReason(j) {
+  if (j.rootCause) return [`\u2192 ${j.headline.replace(/^Skipped because /, "because ")}`];
   const lines = [`\u2192 ${j.headline.replace(/^(Runs|Skipped): /, "")}`];
   if (j.if !== void 0 && j.reason && !j.headline.includes(j.reason)) lines.unshift(`\u2192 ${j.reason}`);
   return lines;
@@ -16407,8 +16643,8 @@ function invokedDirectly() {
 }
 if (invokedDirectly()) {
   main(process.argv.slice(2)).then(
-    (code) => {
-      process.exitCode = code;
+    (code2) => {
+      process.exitCode = code2;
     },
     (e) => {
       process.stderr.write(`why-didnt-my-job-run: ${e.stack ?? String(e)}

@@ -72,6 +72,8 @@ function init() {
     try { localStorage.setItem('theme', next); } catch { /* ignore */ }
   });
   try { const t = localStorage.getItem('theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch { /* ignore */ }
+  // A shared scenario lives in the URL fragment; jumping to the results must not replace it with #results.
+  document.querySelector('.mobile-note a')?.addEventListener('click', (e) => { e.preventDefault(); $('results').scrollIntoView({ block: 'start' }); });
 
   refreshActions();
   renderKnobs();
@@ -287,6 +289,12 @@ function render(github: Record<string, unknown>, notes: string[]) {
     ...(sim.rejected ? [h('div', { class: 'note', text: 'A rejected file produces a failed run named after the file path, with no jobs. Nothing below runs until the file is fixed.' })] : []),
   );
 
+  // What the simulation takes on trust for this workflow, said before the verdicts that rest on it.
+  $('limits').replaceChildren(...(sim.limits.length ? [h('div', { class: 'limits', role: 'note' },
+    h('p', { class: 'limits-head', text: 'What this simulation cannot fully decide here' }),
+    h('ul', {}, ...sim.limits.map((l) => h('li', {}, h('strong', { text: l.title }), `: ${l.where.join('; ')}. `, h('span', { class: 'instead', text: l.instead })))),
+  )] : []));
+
   const jobs = $('jobs');
   jobs.replaceChildren(...sim.jobs.map(renderJob));
 
@@ -310,6 +318,11 @@ function renderJob(v: JobVerdict): HTMLElement {
   // A matrix that expanded is marked combination by combination below.
   if ((v.outcome === 'runs' || v.outcome === 'fails' || v.outcome === 'cancelled') && !combinations.length) title.append(forceSelect(job.id, state.forcedResults[job.id]));
   card.append(title);
+  // A job skipped because of a job upstream: where the skip started comes first, before the chips and the condition.
+  if (v.rootCause) {
+    const rc = v.rootCause;
+    card.append(h('p', { class: 'rootcause' }, ...rc.segments.map((seg) => (seg.code ? h('code', { text: seg.text }) : seg.text)), v.headline.slice(rc.line.length)));
+  }
   if (v.outcome === 'rejected') {
     // The parser may have dropped the very condition it rejected, so showing the if: line here would mislead.
     card.append(h('p', { class: 'reason', text: v.headline }));
@@ -328,7 +341,8 @@ function renderJob(v: JobVerdict): HTMLElement {
         const cond = c.job.ifSource ? `if: ${c.job.ifSource}` : 'no if:';
         list.append(h('li', {}, h('code', { text: c.job.id }), h('span', { class: 'muted', text: ` ${cond} → ` }), h('span', { text: c.headline })));
       }
-      card.append(h('details', { open: v.outcome === 'skipped' }, h('summary', { text: `why ${culprits.length === 1 ? 'that upstream job' : 'those upstream jobs'} did not succeed` }), list));
+      // Open for a skipped job, unless its root cause above already says it.
+      card.append(h('details', { open: v.outcome === 'skipped' && !v.rootCause }, h('summary', { text: `why ${culprits.length === 1 ? 'that upstream job' : 'those upstream jobs'} did not succeed` }), list));
     }
   }
   const ifLine = h('code', { class: 'expr' });
@@ -339,7 +353,7 @@ function renderJob(v: JobVerdict): HTMLElement {
     ifLine.append(h('span', { class: 'wrap', text: 'no if: → evaluated as ' }), job.if);
   }
   card.append(ifLine);
-  card.append(h('p', { class: 'reason', text: v.headline }));
+  if (!v.rootCause) card.append(h('p', { class: 'reason', text: v.headline }));
   for (const p of v.problems) card.append(h('div', { class: 'problem', text: p.message }));
   if (v.evaluation && v.evaluation.ok && v.evaluation.subValues.length) card.append(traceDetails(v.evaluation));
   if (v.evaluation && !v.evaluation.ok) card.append(h('div', { class: 'problem', text: v.evaluation.error }));

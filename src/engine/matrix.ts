@@ -38,7 +38,7 @@ import { TemplateToken } from '@actions/workflow-parser/templates/tokens/templat
 import { TokenType } from '@actions/workflow-parser/templates/tokens/types';
 import type { ParsedJob, ParsedWorkflow } from './workflow.js';
 import type { Json } from './context.js';
-import { isTruthy, CONTEXT_NAMES, type JobResult } from './evaluate.js';
+import { isTruthy, CONTEXT_NAMES, parseExpression, statusFunctions, type JobResult } from './evaluate.js';
 import { collectNames } from './availability.js';
 
 /** A read of `needs.<job>.outputs.<output>`. */
@@ -390,6 +390,14 @@ export function collectOutputRefs(token: TemplateToken): OutputRef[] {
     refsIn(ast, out);
   }
   return out;
+}
+
+/** Every needs.<job>.outputs.<name> read by one expression (a job or step condition). */
+export function outputRefsInExpression(expression: string): OutputRef[] {
+  const out: OutputRef[] = [];
+  // Conditions call the status functions and hashFiles, which the parser has to know to parse them.
+  try { refsIn(parseExpression(expression, statusFunctions({ needs: {} })), out); } catch { /* not an expression the parser takes: nothing is read */ }
+  return uniqueRefs(out);
 }
 
 function refsIn(n: Expr, out: OutputRef[]): void {

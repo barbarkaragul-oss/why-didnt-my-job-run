@@ -5,10 +5,11 @@
  */
 import type { ParsedWorkflow, ParsedJob } from './workflow.js';
 import { decideTrigger, validateTriggers, triggerWarnings, DEFAULT_BRANCH_ONLY, type FilterDecision, type TriggerInput } from './filters.js';
-import { evaluateCondition, parseExpression, statusFunctions, type EvaluationResult, type EvaluationFailure, type JobResult } from './evaluate.js';
+import { evaluateCondition, parseExpression, statusFunctions, type EvaluationResult, type EvaluationFailure, type JobResult, type Decisive } from './evaluate.js';
 import { checkAvailability, type AvailabilityProblem } from './availability.js';
 import { expandMatrix, hasMatrix, describeStrategy, strategyFileProblems, strategyContext, combinationKey, type MatrixExpansion, type MatrixCombination, type OutputRead } from './matrix.js';
 import type { Json } from './context.js';
+import { findLimits, type Limit } from './limits.js';
 
 /**
  * 'blocked': the event does not start the workflow. 'rejected': GitHub refuses the file, so no job exists.
@@ -33,6 +34,47 @@ export interface JobVerdict {
   stepVerdicts: StepVerdict[];
   /** Set when the job has a matrix. `outcome` and `result` are then the whole matrix's, as jobs that need it see them. */
   matrix?: MatrixVerdict;
+  /**
+   * Set when the job is skipped because success() is false, that is because of a job upstream: where it started.
+   * The headline then starts with `rootCause.line` (a note about an upstream matrix can follow it).
+   */
+  rootCause?: RootCauseSummary;
+}
+
+/**
+ * A job where a skip started: a job upstream that did not succeed for a reason of its own. Every such job counts,
+ * not only the first on a needs chain, because success() looks at every ancestor. condition: its own condition was
+ * false (error: it could not be evaluated). failed, cancelled: it ran and ended that way. not-created: its matrix is
+ * empty, so GitHub made no job and reports failure (fixture-matrix).
+ */
+export interface RootCause {
+  job: string;
+  kind: 'condition' | 'error' | 'failed' | 'cancelled' | 'not-created';
+  /** kind condition: the sub-expression that decided it. */
+  decisive?: Decisive;
+  /** kind failed, for a matrix: the combinations that failed, under the names GitHub lists. */
+  combinations?: string[];
+  /**
+   * The jobs between the skipped job and the root, its direct need first. A job that ran can be on the path:
+   * success() looks at every job upstream, so always() on that job does not help the jobs after it (fixture-chain2).
+   * So can a job with a cause of its own (`own`: skipped by its own condition, failed, cancelled): with always() or
+   * failure() in its condition it was decided without looking at the root, which still skips the jobs after it.
+   */
+  via: Array<{ job: string; result: JobResult; own?: true }>;
+}
+
+export interface RootCauseSummary {
+  /** Every root cause upstream, one per root job, in the order of `needs`. */
+  causes: RootCause[];
+  /**
+   * The job's own condition without the success() GitHub puts in front of it, evaluated on its own. Undefined when
+   * the job has no condition, or wrote a status function itself.
+   */
+  ownCondition?: { truthy: boolean; reason: string };
+  /** The sentence in pieces; `code` marks job ids and expressions, which the page sets as code. */
+  segments: Array<{ text: string; code?: boolean }>;
+  /** The same sentence as text: "Skipped because test was skipped, because build's condition ... is false (...)." */
+  line: string;
 }
 
 export interface MatrixVerdict {
@@ -96,6 +138,11 @@ export interface Simulation {
    * real runs: GitHub then creates a failed run named after the file path, with no jobs at all.
    */
   rejected: boolean;
+  /**
+   * What this simulation cannot fully decide for the jobs it shows, with what it does instead (see limits.ts).
+   * Empty when there is nothing to say, when the file is rejected, and when the event does not start the workflow.
+   */
+  limits: Limit[];
 }
 
 export function simulate(input: SimulationInput): Simulation {
@@ -117,6 +164,9 @@ export function simulate(input: SimulationInput): Simulation {
 
   const results = new Map<string, JobResult>();
   const verdicts = new Map<string, JobVerdict>();
+  // For the root cause of a skip: why each job did not succeed on its own account, and the causes it inherited.
+  const ownCauses = new Map<string, Omit<RootCause, 'via'> | undefined>();
+  const inherited = new Map<string, RootCause[]>();
   for (const job of order) {
     const needsResults: Record<string, JobResult> = {};
     for (const n of job.needs) needsResults[n] = results.get(n) ?? 'skipped';
@@ -248,20 +298,136 @@ export function simulate(input: SimulationInput): Simulation {
     } else {
       stepVerdicts = stepsFor(undefined, NO_MATRIX, /\b(matrix)\./);
     }
+    // A job skipped by success() is skipped because of something upstream; GitHub only says "skipped". Follow the
+    // needs chain to the job where it started and name that job's own reason. A cancelled run explains itself.
+    const causes = input.cancelled ? [] : causesThrough(job.needs, verdicts, ownCauses, inherited);
+    inherited.set(job.id, causes);
+    const byUpstream = outcome === 'skipped' && evaluation.ok && !evaluation.truthy && evaluation.decisive.status === 'success' && causes.length > 0;
+    ownCauses.set(job.id, byUpstream ? undefined : ownCause(job.id, outcome, evaluation, matrix));
+    let rootCause: RootCauseSummary | undefined;
+    if (byUpstream) {
+      // The condition as written, without the success() the parser put in front of it: would it stop the job too?
+      const inner = /^success\(\) && \((.*)\)$/s.exec(job.if)?.[1];
+      const wrapped = inner !== undefined && job.ifSource !== undefined && !/\b(success|failure|cancelled|always)\s*\(/i.test(job.ifSource);
+      const own = wrapped ? evaluateCondition(inner, input.github, { needs: needsCtx, ancestors: ancestorsCtx, cancelled: input.cancelled, contexts: { inputs: input.inputs, vars: input.vars ?? {} } }) : undefined;
+      rootCause = summarize(causes, own && own.ok ? { truthy: own.truthy, reason: own.reason } : undefined);
+      headline = rootCause.line;
+    }
     // The status functions saw a failure where the file shows no failing job: say where it came from. And when an
     // upstream matrix is unknown, this job's verdict rests on it making at least one job.
     if (outcome !== 'rejected' && outcome !== 'blocked') {
       const upstream = [...ancestors].map((a) => verdicts.get(a)).filter((v): v is JobVerdict => !!v);
-      const empty = upstream.filter((v) => v.outcome === 'not-created').map((v) => v.job.id);
+      const named = new Set(rootCause?.causes.map((c) => c.job));
+      const empty = upstream.filter((v) => v.outcome === 'not-created' && !named.has(v.job.id)).map((v) => v.job.id);
       const unknown = upstream.filter((v) => v.matrix?.expansion.kind === 'unknown').map((v) => v.job.id);
       const sentence = (s: string) => (/[.)]$/.test(s) ? s : `${s}.`);
       if (empty.length) headline = `${sentence(headline)} ${empty.join(' and ')} ${empty.length === 1 ? 'counts as failed: its matrix makes' : 'count as failed: their matrices make'} no job, and GitHub reports that as failure.`;
       if (unknown.length) headline = `${sentence(headline)} This assumes the matrix of ${unknown.join(' and ')} makes at least one job; if it comes out empty, GitHub creates none and reports failure for it.`;
     }
     results.set(job.id, result);
-    verdicts.set(job.id, { job, outcome, result, evaluation, headline, needsResults, ancestorResults, problems, stepVerdicts, ...(matrix ? { matrix } : {}) });
+    verdicts.set(job.id, { job, outcome, result, evaluation, headline, needsResults, ancestorResults, problems, stepVerdicts, ...(matrix ? { matrix } : {}), ...(rootCause ? { rootCause } : {}) });
   }
-  return { trigger, triggerNotes, fileProblems, jobs: order.map((j) => verdicts.get(j.id)!), graphProblems, rejected };
+  const jobs = order.map((j) => verdicts.get(j.id)!);
+  const limits = rejected || !trigger.matched ? [] : findLimits(workflow, jobs, { outputs: known, vars: input.vars ?? {} });
+  return { trigger, triggerNotes, fileProblems, jobs, graphProblems, rejected, limits };
+}
+
+// ---------- the root cause of a skip ----------
+
+/** Why a job did not succeed on its own account; undefined when it succeeded or was skipped because of upstream. */
+function ownCause(job: string, outcome: JobOutcome, evaluation: EvaluationResult | EvaluationFailure, matrix: MatrixVerdict | undefined): Omit<RootCause, 'via'> | undefined {
+  if (outcome === 'not-created') return { job, kind: 'not-created' };
+  if (outcome === 'cancelled') return { job, kind: 'cancelled' };
+  if (outcome === 'fails') {
+    const failed = matrix?.combinations.filter((c) => c.result === 'failure').map((c) => c.combination.name) ?? [];
+    return { job, kind: 'failed', ...(failed.length ? { combinations: failed } : {}) };
+  }
+  if (outcome !== 'skipped') return undefined;
+  return evaluation.ok ? { job, kind: 'condition', decisive: evaluation.decisive } : { job, kind: 'error' };
+}
+
+/**
+ * The root causes behind a job's needs, in the order of `needs`: a need that did not succeed on its own account is
+ * one; a need skipped because of upstream passes on its causes; so does a need that ran, because success() looks at
+ * every ancestor (fixture-chain, fixture-chain2). A need with a cause of its own passes on the causes behind it as
+ * well: a job that failed after always(), or was skipped by `always() && x`, has jobs upstream that did not succeed
+ * either, and fixing its own cause would still leave the job after it skipped. One entry per root job.
+ */
+function causesThrough(needs: string[], verdicts: Map<string, JobVerdict>, own: Map<string, Omit<RootCause, 'via'> | undefined>, inherited: Map<string, RootCause[]>): RootCause[] {
+  const out: RootCause[] = [];
+  const seen = new Set<string>();
+  for (const n of needs) {
+    const v = verdicts.get(n);
+    if (!v) continue;
+    const mine = v.result !== 'success' ? own.get(n) : undefined;
+    const behind = (inherited.get(n) ?? []).map((c) => ({ ...c, via: [{ job: n, result: v.result, ...(mine ? { own: true as const } : {}) }, ...c.via] }));
+    const list: RootCause[] = mine ? [{ ...mine, via: [] }, ...behind] : behind;
+    for (const c of list) if (!seen.has(c.job)) { seen.add(c.job); out.push(c); }
+  }
+  return out;
+}
+
+type Segment = { text: string; code?: boolean };
+const code = (text: string): Segment => ({ text, code: true });
+
+/** `build's condition github.ref_type == 'branch' is false (github.ref_type is "tag")` */
+function rootSegments(c: RootCause): Segment[] {
+  switch (c.kind) {
+    case 'condition': {
+      const d = c.decisive!;
+      const detail = [d.sides.join(', '), d.hint ?? ''].filter(Boolean).join('; ');
+      return [code(c.job), { text: "'s condition " }, code(d.text), { text: ` is ${d.value}${detail ? ` (${detail})` : ''}` }];
+    }
+    case 'error': return [code(c.job), { text: "'s condition could not be evaluated" }];
+    case 'failed': return c.combinations?.length ? [...listed(c.combinations.map(code)), { text: ' failed' }] : [code(c.job), { text: ' failed' }];
+    case 'cancelled': return [code(c.job), { text: ' was cancelled' }];
+    case 'not-created': return [code(c.job), { text: "'s matrix makes no job, which GitHub reports as failure" }];
+  }
+}
+
+/**
+ * `test was skipped, because build's condition ...`. A job on the path that did not pass the skip on (it ran, or it has
+ * a cause of its own, named separately) is `upstream of y (which ran)` or `upstream of y`; of several such jobs in a
+ * row, the first is named.
+ */
+function chainSegments(c: RootCause): Segment[] {
+  const out: Segment[] = [];
+  const passedOn = (hop: RootCause['via'][number]) => hop.result === 'skipped' && !hop.own;
+  for (let i = 0; i < c.via.length; i++) {
+    const hop = c.via[i]!;
+    if (passedOn(hop)) {
+      out.push(code(hop.job), { text: ' was skipped, because ' });
+    } else {
+      out.push({ text: 'upstream of ' }, code(hop.job), { text: hop.result === 'success' ? ' (which ran), ' : ', ' });
+      while (c.via[i + 1] && !passedOn(c.via[i + 1]!)) i++;
+    }
+  }
+  return [...out, ...rootSegments(c)];
+}
+
+/** a, b and c */
+function listed(items: Segment[]): Segment[] {
+  return items.flatMap((s, i) => (i === 0 ? [s] : [{ text: i === items.length - 1 ? ' and ' : ', ' }, s]));
+}
+
+/** The headline of a job skipped because of upstream: at most two root causes, then how many more and which. */
+function summarize(causes: RootCause[], ownCondition: RootCauseSummary['ownCondition']): RootCauseSummary {
+  const shown = causes.slice(0, 2);
+  const rest = causes.slice(2);
+  const segments: Segment[] = [{ text: 'Skipped because ' }];
+  shown.forEach((c, i) => segments.push(...(i ? [{ text: '; and because ' }] : []), ...chainSegments(c)));
+  if (rest.length) segments.push({ text: `; and ${rest.length} more: ` }, ...listed(rest.map((c) => code(c.job))));
+  segments.push({ text: '.' });
+  if (shown.some((c) => c.via.some((h) => h.result !== 'skipped' || h.own))) segments.push({ text: ' success() looks at every job upstream, not only the ones in needs.' });
+  if (ownCondition) segments.push({ text: ownCondition.truthy ? ' Its own condition is true for this event.' : ` Its own condition is false too: ${ownCondition.reason}.` });
+  // Adjacent plain pieces are merged, so the page makes as few text nodes as the sentence needs.
+  const merged: Segment[] = [];
+  for (const s of segments) {
+    const last = merged[merged.length - 1];
+    if (last && !last.code && !s.code) last.text += s.text;
+    else merged.push({ ...s });
+  }
+  return { causes, ...(ownCondition ? { ownCondition } : {}), segments: merged, line: merged.map((s) => s.text).join('') };
 }
 
 const NO_MATRIX = 'the simulation does not know in a job without a matrix';

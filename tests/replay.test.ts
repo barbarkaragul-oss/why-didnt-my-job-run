@@ -368,7 +368,8 @@ test('replay fixture-matrix: an empty matrix creates no job at all, and the jobs
     assert.equal(byId(dependent).outcome, 'skipped', dependent);
   }
   // GitHub shows nothing for the missing job, so the skipped dependent is where the simulation has to say why.
-  assert.match(byId('after_dynamic_empty').headline, /success\(\) is false because dynamic_empty failed\. dynamic_empty counts as failed: its matrix makes no job/);
+  assert.equal(byId('after_dynamic_empty').headline, "Skipped because dynamic_empty's matrix makes no job, which GitHub reports as failure.");
+  assert.deepEqual(byId('after_dynamic_empty').rootCause?.causes.map((c) => [c.job, c.kind]), [['dynamic_empty', 'not-created']]);
   assert.match(byId('after_whole_json_empty_always').headline, /whole_json_empty counts as failed/);
   // the run as a whole concluded failure
   assert.equal(fx.conclusion, 'failure');

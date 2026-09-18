@@ -4,7 +4,7 @@
  * defaults (a job without `if:` gets `success()`), needs, strategy and steps all come from the
  * same code GitHub ships in its language server.
  */
-import { parseWorkflow, convertWorkflowTemplate, NoOperationTraceWriter } from '@actions/workflow-parser';
+import { parseWorkflow, convertWorkflowTemplate, NoOperationTraceWriter, isMapping, isString } from '@actions/workflow-parser';
 import { ErrorPolicy } from '@actions/workflow-parser/model/convert';
 import type { WorkflowTemplate, WorkflowJob, Step } from '@actions/workflow-parser/model/workflow-template';
 import type { TemplateToken } from '@actions/workflow-parser/templates/tokens/template-token';
@@ -36,6 +36,12 @@ export interface ParsedJob {
   outputs?: Record<string, string>;
   runsOn: string | undefined;
   reusable: boolean;
+  /** For a reusable workflow job, the workflow it calls (`uses:`). */
+  uses?: string;
+  /** `environment:` as written, or its `name:`. Its protection rules live in the repository's settings. */
+  environment?: string;
+  /** `concurrency:` as written (the group); only its presence matters to the simulation, which does not model it. */
+  concurrency?: string;
   steps: ParsedStep[];
 }
 
@@ -45,6 +51,8 @@ export interface ParsedWorkflow {
   events: WorkflowTemplate['events'];
   jobs: ParsedJob[];
   errors: string[];
+  /** The workflow-level `concurrency:` group as written. */
+  concurrency?: string;
 }
 
 const SUCCESS_WRAPPER = /^success\(\) && \((.*)\)$/s;
@@ -66,6 +74,7 @@ export async function parseWorkflowFile(content: string, fileName = 'workflow.ym
     events: template.events ?? {},
     jobs: (template.jobs ?? []).map(toJob),
     errors: [...new Set(errors)],
+    ...(template.concurrency ? { concurrency: groupText(template.concurrency) } : {}),
   };
 }
 
@@ -86,6 +95,9 @@ function toJob(job: WorkflowJob): ParsedJob {
     outputs: job.outputs ? Object.fromEntries([...job.outputs].map((p) => [tokenText(p.key), sourceText(p.value)])) : undefined,
     runsOn,
     reusable: job.type === 'reusableWorkflowJob',
+    ...(job.type === 'reusableWorkflowJob' ? { uses: tokenText(job.ref) } : {}),
+    ...(job.type === 'job' && job.environment ? { environment: fieldText(job.environment, 'name') } : {}),
+    ...(job.concurrency ? { concurrency: groupText(job.concurrency) } : {}),
     steps,
   };
 }
@@ -112,6 +124,20 @@ function toStep(step: Step, index: number): ParsedStep {
 function sourceText(token: TemplateToken): string {
   const t = token as unknown as { expression?: unknown; source?: unknown };
   return typeof t.expression === 'string' && typeof t.source === 'string' ? t.source : tokenText(token);
+}
+
+/** `concurrency: ci-${{ github.ref }}` or `concurrency: { group: ..., cancel-in-progress: true }`: the group. */
+function groupText(token: TemplateToken): string {
+  return fieldText(token, 'group');
+}
+
+/** A scalar as written, or one key of a mapping (`environment: { name: production, url: ... }`). */
+function fieldText(token: TemplateToken, key: string): string {
+  if (isMapping(token)) {
+    for (const pair of token) if (isString(pair.key) && pair.key.value === key) return sourceText(pair.value);
+    return token.toString();
+  }
+  return sourceText(token);
 }
 
 function tokenText(token: TemplateToken | undefined): string {

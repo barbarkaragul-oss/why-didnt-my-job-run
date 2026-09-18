@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <a href="https://barbarkaragul-oss.github.io/why-didnt-my-job-run/"><img src="docs/demo.gif" alt="The sample with a matrix read from a job output: with [&quot;api&quot;,&quot;web&quot;] it makes four test jobs; with [] the test card turns NO JOB CREATED and the job that needs it is skipped, because GitHub reports an empty matrix as failure; marking test (api, 20) as failing makes fail-fast cancel the other three with GitHub&#39;s own annotation" width="900"></a>
+  <a href="https://barbarkaragul-oss.github.io/why-didnt-my-job-run/"><img src="docs/demo.gif" alt="The default demo, a push of the tag v1.4.0: lint runs, build is skipped by its own condition, and the test and deploy cards say why they were skipped too: build&#39;s condition github.ref_type == &#39;branch&#39; is false. Switching to a push to main turns lint, build and test green, and deploy is then skipped by its own condition" width="900"></a>
 </p>
 
 Every GitHub Actions user has stared at a grey "skipped" job and asked why. The usual answer is a dozen "test ci" commits. This page answers in a second: paste the workflow, choose `push` to `main` or a `pull_request` from a fork with a `release` label or a `workflow_dispatch` with `deploy: true`, and every job turns green or grey with the reason next to it, down to the value of each sub-expression.
@@ -30,11 +30,36 @@ if: github.event.pull_request.head.repo.fork == false
   (loose equality: null and boolean are compared as numbers, null/false/'' count as 0)
 ```
 
+The page opens on the kind of workflow that costs an afternoon: a release pipeline after the tag `v1.4.0` was pushed. `deploy` is skipped although its own condition is true on a tag, and its card says where that started, two jobs up. The command line version, run on that workflow, prints the same:
+
+```
+$ npx github:barbarkaragul-oss/why-didnt-my-job-run --tag v1.4.0
+push of tag v1.4.0 at e76ff27 · octo-org/octo-repo · default branch main
+
+.github/workflows/ci.yml · CI and release
+  triggers
+    on: push is present.
+    tags: v* matches "v1.4.0"
+  runs      lint
+  skipped   build       if: github.ref_type == 'branch' && github.actor != 'dependabot[bot]'
+                        → github.ref_type is "tag" → github.ref_type == 'branch' is false
+  skipped   test
+                        → because build's condition github.ref_type == 'branch' is false (github.ref_type is "tag").
+  skipped   deploy      if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'
+                        → because test was skipped, because build's condition github.ref_type == 'branch' is false (github.ref_type is "tag"). Its own condition is true for this event.
+  runs      notify      if: always()
+                        → always() is true
+  skipped   open-issue  if: failure()
+                        → failure() is false: no job upstream failed
+```
+
 ## What it does
 
 - **Trigger decision.** Does this event start the workflow at all? `on:` filters are applied in the documented order: activity types (and the pull_request default of opened/synchronize/reopened), `branches` / `branches-ignore`, `tags` / `tags-ignore`, `paths` / `paths-ignore`, with GitHub's pattern syntax (`*`, `**`, `?`, `+`, `[]`, `!` negation with ordering). Each rule reports what it matched.
 - **Job decisions in dependency order.** Every job's `if:` is evaluated by GitHub's own expression package, including the implicit `success() &&` wrapper its parser adds to a condition that has no status function, with `needs.<job>.result` and the status functions computed from every job upstream: the recorded runs show `success()` and `failure()` look at all ancestors, not only the direct `needs`. Mark a job as failed or cancelled to see what `failure()`, `always()` and `!cancelled()` do downstream.
 - **Why.** The decisive comparison is named with both sides' values, and a note explains coercions (`null == false` is true, `inputs.deploy == 'true'` is false for a boolean input, string comparison is case-insensitive). Expand a job to see every sub-expression and its value.
+- **Where a skip started.** GitHub marks a job skipped because of a job upstream as "skipped" and nothing more. Here its card follows the `needs` chain to the first job that did not succeed for a reason of its own (its condition was false, it failed or was cancelled, or its matrix made no job) and names that job's deciding comparison, first thing under the title. The chain goes past a job that ran with `always()` too, and past a job that failed or was skipped for a reason of its own, to the jobs behind it that did not succeed either, since `success()` looks at every job upstream. Where there are several root causes, the first two are named and the rest listed by job. The job's own condition, without the `success()` GitHub puts in front of it, is weighed as well: true, or false too.
+- **What it cannot decide, said up front.** When the workflow uses something the simulation cannot fully decide for this event, a yellow box above the job cards lists exactly those things, each with what the simulation does instead: a reusable workflow it does not expand, a step condition on `steps.*`, `env` or `hashFiles()` it marks unknown, a step with `failure()` (every earlier step is taken to succeed), a job output or configuration variable nobody gave (taken as empty), a matrix from a job output with no value yet, a matrix outcome no recorded run covers, fail-fast timing, a job name built from matrix values, an environment's protection rules, a concurrency group. Only what bears on the verdicts shown is listed (the steps of a skipped job are not), and nothing when there is nothing to say.
 - **Matrix expansion.** A job with `strategy.matrix` becomes the jobs GitHub creates for it, each under the name the run lists (`test (linux, 20)`), with its own `matrix` values and its own step decisions: the cross product, `exclude`, `include` (added to the combinations it fits, or a combination of its own), `fail-fast` (mark one combination as failing and the others are cancelled with GitHub's annotation) and the result the jobs that need it see. A matrix read from a job output (`fromJSON(needs.plan.outputs.list)`) stays unknown until you type that output. When it comes out empty, the card says what GitHub does and does not tell you: no job at all, neither failed nor skipped, and `failure` for every job that needs it.
 - **Things GitHub rejects.** `hashFiles()` or `matrix` in a job-level `if:`, `branches` together with `branches-ignore`, unknown keys: the file is reported as GitHub would reject it and every job is marked not run, as the recorded hashFiles runs show (a failed run named after the file, with no jobs, sibling jobs included). A filter list with only negative patterns is different: GitHub creates no run at all, and the trigger card says so.
 - **The context you get.** The `github` context for the scenario, derived per event as documented (`refs/pull/N/merge` for pull requests, the base branch for `pull_request_target`, the default branch for `issues` and `schedule`, the tag for `release`), with the GitHub Docs description of every field on hover.
@@ -81,7 +106,7 @@ pull_request (opened) from fix/login into main, head ffb7c2e · octo-org/octo-re
   blocked   publish
 ```
 
-A job is `runs`, `skipped`, `fails` (you marked it with `--fail`), `cancelled` (fail-fast), `blocked` (the event does not start the workflow), `rejected` (GitHub refuses the file, so the run fails with no jobs) or `not-created` (its matrix is empty, so GitHub creates no job and the jobs that need it see `failure`). A matrix job gets one line per job GitHub creates, under the name the run lists. `--json` prints all of it, steps included, for scripts.
+A job is `runs`, `skipped`, `fails` (you marked it with `--fail`), `cancelled` (fail-fast), `blocked` (the event does not start the workflow), `rejected` (GitHub refuses the file, so the run fails with no jobs) or `not-created` (its matrix is empty, so GitHub creates no job and the jobs that need it see `failure`). A matrix job gets one line per job GitHub creates, under the name the run lists. A job skipped because of a job upstream gets the page's root-cause line (`→ because test was skipped, because build's condition ... is false (...)`), and what the simulation cannot decide in a workflow is listed under `limits:` above its jobs. `--json` prints all of it, steps, `rootCause` and `limits` included, for scripts.
 
 | Flag | What it sets |
 |---|---|
@@ -173,6 +198,8 @@ The script is called `bundle` and not `build` on purpose: before `npx github:...
 `npx tsx scripts/record-fixtures.ts` re-records the fixtures from the fixtures repository (public; every run and each job's conclusion are visible under its Actions tab, so the recordings can be checked against GitHub's own record); `scripts/build-payloads.ts` refreshes the example payloads from the npm package.
 
 ## Limits
+
+What bears on the jobs in front of you is also listed on the page, in the yellow box above the job cards, and by the command line version under `limits:`: a reusable workflow that runs, a step condition marked unknown or a step with `failure()`, a job output or configuration variable taken as empty, a matrix that cannot be expanded yet or whose outcome no recorded run covers, fail-fast timing, a job name built from matrix values, an environment, a concurrency group.
 
 - **On the page, changed files are typed by you.** GitHub strips added/modified/removed lists from the push payload it gives to Actions, so no simulator can read them from the event. The [command line version](#run-it-on-your-own-repository) reads them from git.
 - **Matrices** are expanded as GitHub's parser expands them and as the recorded run confirms, with two things left to you. Job outputs are whatever you type: a matrix that reads one stays unknown until you do, because only the job knows what it writes. And a run is not a timeline: `max-parallel` is shown but changes no outcome, and when one combination fails with `fail-fast` on, every other combination is taken to be still running and cancelled (on GitHub, those that already finished keep their result). The checks GitHub's parser makes when it loads a file, such as a literal empty list or an `exclude` key that is not in the matrix, follow its source and are not recorded; neither is a job `name:` that reads `matrix`, which is shown as the evaluated name without the values appended. Two cases are assumed to end like the recorded empty matrix (no job, `failure` for the jobs that need it) and the card says so: an `exclude` that removes every combination, and a strategy GitHub cannot build, such as a job output used without `fromJSON()`.

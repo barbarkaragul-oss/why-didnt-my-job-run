@@ -20,6 +20,38 @@ async function run(sampleId: string, override: Partial<ScenarioState> = {}) {
   return { workflow, sim, outcome, reason };
 }
 
+test('release-tag, the sample the page opens on: a tag push skips build by its own condition, and test and deploy after it for that reason', async () => {
+  assert.equal(SAMPLES[0]!.id, 'release-tag', 'the page loads the first sample');
+  assert.ok(SAMPLES[0]!.yaml.split('\n').length <= 60, 'short enough to read on the first screen');
+  const tag = await run('release-tag');
+  assert.equal(tag.sim.trigger.matched, true);
+  assert.deepEqual(tag.workflow.errors, []);
+  assert.deepEqual(tag.outcome, { lint: 'runs', build: 'skipped', test: 'skipped', deploy: 'skipped', notify: 'runs', 'open-issue': 'skipped' });
+  assert.equal(tag.reason['build'], 'Skipped: github.ref_type is "tag" → github.ref_type == \'branch\' is false');
+  // one hop, then two: each names build and the comparison that skipped it
+  assert.equal(tag.reason['test'], 'Skipped because build\'s condition github.ref_type == \'branch\' is false (github.ref_type is "tag").');
+  assert.equal(tag.reason['deploy'], 'Skipped because test was skipped, because build\'s condition github.ref_type == \'branch\' is false (github.ref_type is "tag"). Its own condition is true for this event.');
+  const deploy = tag.sim.jobs.find((j) => j.job.id === 'deploy')!;
+  assert.deepEqual(deploy.rootCause?.causes.map((c) => [c.job, c.kind, c.decisive?.text, c.via.map((h) => `${h.job}:${h.result}`)]), [['build', 'condition', "github.ref_type == 'branch'", ['test:skipped']]]);
+  assert.deepEqual(deploy.rootCause?.ownCondition?.truthy, true);
+  // always() runs whatever happened upstream; failure() is false when upstream jobs were only skipped (fixture-chain2)
+  assert.equal(tag.reason['notify'], 'Runs: always() is true');
+  assert.equal(tag.reason['open-issue'], 'Skipped: failure() is false: no job upstream failed');
+  assert.deepEqual(tag.sim.limits, [], 'nothing on the first screen that the simulation cannot decide');
+
+  // A push to main: build and test run, and deploy's own condition is what skips it.
+  const main = await run('release-tag', { refType: 'branch', branch: 'main' });
+  assert.deepEqual(main.outcome, { lint: 'runs', build: 'runs', test: 'runs', deploy: 'skipped', notify: 'runs', 'open-issue': 'skipped' });
+  assert.equal(main.reason['deploy'], 'Skipped: startsWith(github.ref, \'refs/tags/v\') is false');
+
+  // lint marked as failing: the chain names lint, and open-issue runs because failure() sees lint upstream (fixture-chain).
+  const failing = await run('release-tag', { forcedResults: { lint: 'failure' } });
+  assert.deepEqual(failing.outcome, { lint: 'fails', build: 'skipped', test: 'skipped', deploy: 'skipped', notify: 'runs', 'open-issue': 'runs' });
+  assert.equal(failing.reason['build'], 'Skipped because lint failed. Its own condition is false too: github.ref_type is "tag" → github.ref_type == \'branch\' is false.');
+  assert.equal(failing.reason['deploy'], 'Skipped because test was skipped, because build was skipped, because lint failed. Its own condition is true for this event.');
+  assert.equal(failing.reason['open-issue'], 'Runs: failure() is true because lint (upstream) failed');
+});
+
 test('deploy-main: push to main runs deploy; a pull request skips it; a failed build skips deploy but not notify', async () => {
   const main = await run('deploy-main');
   assert.equal(main.sim.trigger.matched, true);
@@ -29,7 +61,7 @@ test('deploy-main: push to main runs deploy; a pull request skips it; a failed b
   assert.match(pr.reason['deploy']!, /github\.ref is "refs\/pull\/\d+\/merge"/);
   const failed = await run('deploy-main', { forcedResults: { build: 'failure' } });
   assert.deepEqual(failed.outcome, { build: 'fails', deploy: 'skipped', notify: 'runs' });
-  assert.match(failed.reason['deploy']!, /success\(\) is false because build failed/);
+  assert.equal(failed.reason['deploy'], 'Skipped because build failed. Its own condition is true for this event.');
 });
 
 test('fork-footgun: the naive check runs on a push (null == false) and the fixed one does not', async () => {
@@ -62,11 +94,13 @@ test('skipped-needs: on a tag push lint is skipped, so test is skipped without a
   const tag = await run('skipped-needs');
   assert.equal(tag.outcome['lint'], 'skipped');
   assert.equal(tag.outcome['test'], 'skipped');
-  assert.match(tag.reason['test']!, /lint was skipped/);
+  assert.equal(tag.reason['test'], 'Skipped because lint\'s condition github.ref_type == \'branch\' is false (github.ref_type is "tag").');
   assert.equal(tag.outcome['report'], 'runs');
   assert.equal(tag.outcome['report-only-if-test-ran'], 'skipped');
   assert.equal(tag.outcome['after-report'], 'skipped', 'always() rescues report only; after-report still sees the skipped ancestor');
-  assert.match(tag.reason['after-report']!, /lint \(upstream\) was skipped/);
+  // report ran (!cancelled()), yet after-report's success() still sees lint upstream of it
+  assert.match(tag.reason['after-report']!, /^Skipped because upstream of report \(which ran\), lint's condition github\.ref_type == 'branch' is false/);
+  assert.match(tag.reason['after-report']!, /success\(\) looks at every job upstream/);
   const branch = await run('skipped-needs', { refType: 'branch', branch: 'feature/a' });
   assert.deepEqual(branch.outcome, { lint: 'runs', test: 'runs', report: 'runs', 'report-only-if-test-ran': 'runs', 'after-report': 'runs' });
 });
@@ -118,6 +152,7 @@ test('matrix-empty: two packages make four test jobs; an empty list makes none, 
   const empty = await run('matrix-empty', { jobOutputs: { plan: { packages: '[]' } } });
   assert.deepEqual(empty.outcome, { plan: 'runs', test: 'not-created', report: 'skipped', summary: 'runs' });
   assert.match(empty.reason['test']!, /No job created/);
+  assert.equal(empty.reason['report'], "Skipped because test's matrix makes no job, which GitHub reports as failure.");
   assert.equal(empty.sim.jobs.find((j) => j.job.id === 'summary')!.needsResults['test'], 'failure');
   const unknown = await run('matrix-empty', { jobOutputs: {} });
   assert.equal(unknown.sim.jobs.find((j) => j.job.id === 'test')!.matrix?.expansion.kind, 'unknown');

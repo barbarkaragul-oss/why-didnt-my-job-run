@@ -248,7 +248,9 @@ test('--fail marks a job as failing, and the jobs after it see it', async () => 
   const repo = makeRepo();
   const r = await report(repo, '--fail', 'build');
   assert.deepEqual(outcomes(r, '.github/workflows/ci.yml'), { build: 'fails', deploy: 'skipped', pr_only: 'skipped' });
-  assert.match(r.workflows[0]!.jobs.find((j) => j.id === 'deploy')!.headline, /success\(\) is false because build failed/);
+  const deploy = r.workflows[0]!.jobs.find((j) => j.id === 'deploy')!;
+  assert.equal(deploy.headline, 'Skipped because build failed. Its own condition is true for this event.');
+  assert.deepEqual(deploy.rootCause?.causes.map((c) => [c.job, c.kind, c.via]), [['build', 'failed', []]]);
 });
 
 // A matrix read from a job output, the "one job per changed package" pattern. What GitHub does with it is recorded
@@ -301,7 +303,8 @@ test('matrix: --output expands a matrix read from a job output, --fail and --exp
   assert.match(failed.out, /^ +cancelled +test \(web\)\n +The strategy configuration was canceled because "test\.api" failed\.$/m);
   assert.match(failed.out, /^expect-run test \(web\): FAILED \(cancelled in \.github\/workflows\/matrix\.yml\)$/m);
   assert.match(failed.out, /^expect-run test:api: ok \(fails in \.github\/workflows\/matrix\.yml\)$/m);
-  assert.match(failed.out, /^ +skipped +after\n +→ success\(\) is false because test failed$/m);
+  // the job after the matrix names the combination that failed, not only the matrix
+  assert.match(failed.out, /^ +skipped +after\n +→ because test \(api\) failed\.$/m);
 
   // An empty list: GitHub creates no job for the matrix at all, and the job after it is skipped.
   const empty = await cli(repo, ...only, '--output', 'plan.targets=[]', '--expect-run', 'test');
@@ -312,6 +315,52 @@ test('matrix: --output expands a matrix read from a job output, --fail and --exp
   const wrong = await cli(repo, ...only, ...given, '--fail', 'test:db');
   assert.equal(wrong.code, 2);
   assert.match(wrong.err, /test has no such combination\. Its combinations: test:web, test:api\./);
+});
+
+// The same two things the page shows: where a skip started, on the skipped job's line, and what the simulation cannot
+// decide, under "limits:" before the jobs.
+const CHAIN = `name: Chain
+on: push
+jobs:
+  build:
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build
+      - name: Upload logs
+        if: failure()
+        run: echo logs
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps: [{ run: echo test }]
+  deploy:
+    needs: test
+    if: vars.DEPLOY == 'on'
+    uses: ./.github/workflows/deploy.yml
+`;
+
+test('the root cause of a skip and the limits notice, as the page shows them', async () => {
+  const repo = makeRepo();
+  write(repo, '.github/workflows/chain.yml', CHAIN);
+  const only = ['--workflow', 'chain.yml'];
+  const text = await cli(repo, ...only);
+  assert.equal(text.code, 0, text.err);
+  assert.match(text.out, /^ +skipped +test\n +→ because build's condition github\.ref_type == 'tag' is false \(github\.ref_type is "branch"\)\.$/m);
+  assert.match(text.out, /^ +skipped +deploy +if: vars\.DEPLOY == 'on'\n +→ because test was skipped, because build's condition github\.ref_type == 'tag' is false \(github\.ref_type is "branch"\)\. Its own condition is false too: vars\.DEPLOY is null → vars\.DEPLOY == 'on' is false \(loose equality: [^)]*\)\.$/m);
+  // build and its steps do not run, and deploy does not run: its variable and its called workflow are not caveats
+  assert.match(text.out, /^ +limits:\n +Configuration variable: deploy reads vars\.DEPLOY\. Taken as empty \(null\): its value lives in the repository's settings\.\n +skipped +build/m);
+  const json = await report(repo, ...only);
+  assert.deepEqual(json.workflows[0]!.limits.map((l) => l.kind), ['vars']);
+  const deploy = json.workflows[0]!.jobs.find((j) => j.id === 'deploy')!;
+  assert.deepEqual(deploy.rootCause?.causes.map((c) => [c.job, c.kind, c.via.map((h) => h.job)]), [['build', 'condition', ['test']]]);
+  assert.equal(deploy.rootCause?.ownCondition?.truthy, false);
+
+  // With the variable given, and build running on a tag: nothing is skipped, and the notice lists what now runs.
+  git(repo, 'tag', 'v1');
+  const tag = await cli(repo, ...only, '--tag', 'v1', '--var', 'DEPLOY=on');
+  assert.doesNotMatch(tag.out, /→ because/);
+  assert.match(tag.out, /^ +limits:\n +Reusable workflow: deploy \(uses: \.\/\.github\/workflows\/deploy\.yml\)\. .+\n +Step that runs after a failed step: build · Upload logs \(if: failure\(\)\)\. /m);
 });
 
 test('errors: outside a repository, an unknown flag, an unknown job, an unknown event all exit with 2', async () => {
